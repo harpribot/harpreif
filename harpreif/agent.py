@@ -1,5 +1,5 @@
 import tensorflow as tf
-from network_utils import weight_variable, bias_variable, conv1d, max_pool_4x1
+from network_utils import weight_variable, bias_variable, conv1d, max_pool_2x2
 from collections import deque
 from image_handler import ImageNet
 from environment import Environment
@@ -21,6 +21,15 @@ TRIES_PER_IMAGE = 100
 
 class Agent(object):
     def __init__(self, num_actions, grid_dim, num_gradients):
+        """
+
+        :param num_actions: Number of actions possible for the agent - The encoding is such that,
+                            if i_th piece is to be placed in j_th location (of grid_dim ** 2 = N possible)
+                            locations, then the corresponding action index = i * N + j
+        :param grid_dim: Number of horizontal (equalling vertical breaks) on the original image to form pieces
+        :param num_gradients: Number of bins for HOG (Histogram of Oriented Gradients) for each patch in a
+                            sliding window across the jigsaw image (the image that is already been constructed)
+        """
         self.grid_dim = grid_dim
         self.num_gradients = num_gradients
         self.num_actions = num_actions
@@ -30,11 +39,19 @@ class Agent(object):
         self.sess = None
 
     def play_game(self):
+        """
+        Initiates gameplay using DQN based reinforcement learning
+        :return: None
+        """
         self.sess = tf.InteractiveSession()
         self.__create_network()
         self.__train_network()
 
     def __initialize_weights_and_biases(self):
+        """
+        Creates the layers to be used by the DQN network, and initializes their weights and biases
+        :return: None
+        """
         self.W_conv1 = weight_variable([8, 8, self.input_channels, 32])
         self.b_conv1 = bias_variable([32])
 
@@ -54,15 +71,31 @@ class Agent(object):
         self.b_fc3 = bias_variable([self.num_actions])
 
     def __form_input_layer(self):
-        self.s = tf.placeholder("float", [None, self.input_height, self.input_width, 3])
+        """
+        Forms the input layer of gradient images of dimension (self.input_height, self.input_width, self.input_channels)
+        Here,
+        input_channels = number of gradient directions considered by the HOG filter.
+        input_height = number of windows of window_size = WINDOW_SIZE, and stride = SLIDING_STRIDE possible along row
+        input_width <= input_height as all images are square images of size (INPUT_HEIGHT x INPUT_WIDTH)
+        :return: None
+        """
+        self.s = tf.placeholder("float", [None, self.input_height, self.input_width, self.input_channels])
 
     def __form_hidden_layers(self):
+        """
+        Forms the convolution layers with non-linear recurrent units, followed by fully connected units
+        :return: None
+        """
         self.__form_convolution_layers()
         self.__form_fully_connected_layers()
 
     def __form_convolution_layers(self):
+        """
+        Forms 3 convolution layers, with a max-pooling layer after first convolution layer.
+        :return: None
+        """
         self.h_conv1 = tf.nn.relu(conv1d(self.s, self.W_conv1, 4) + self.b_conv1)
-        self.h_pool1 = max_pool_4x1(self.h_conv1)
+        self.h_pool1 = max_pool_2x2(self.h_conv1)
 
         self.h_conv2 = tf.nn.relu(conv1d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
         # h_pool2 = max_pool_2x2(h_conv2)
@@ -74,20 +107,38 @@ class Agent(object):
         self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, self.input_height * self.input_width])
 
     def __form_fully_connected_layers(self):
+        """
+        Forms 2 fully connected layers
+        :return: None
+        """
         self.h_fc1 = tf.nn.relu(tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1)
 
         self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
 
     def __form_output_layer(self):
+        """
+        Forms The output layer (linear in this case) - The value represents the value function for the action
+        :return: None
+        """
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
 
     def __create_network(self):
+        """
+        Creates the entire DQN network
+        :return: None
+        """
         self.__initialize_weights_and_biases()
         self.__form_input_layer()
         self.__form_hidden_layers()
         self.__form_output_layer()
 
     def __train_network(self, image_dir):
+        """
+        Trains the DQN network
+        :param image_dir: The location of the imagenet directory consisting of just the images. No labels required here.
+                        As this is a unsupervized representation learning problem.
+        :return: None
+        """
         # define the cost function
         self.action = tf.placeholder("float", [None, self.num_actions])
         self.label = tf.placeholder("float", [None])
@@ -102,7 +153,7 @@ class Agent(object):
 
         # train
         # get the start state of the network
-        imagenet = ImageNet(image_dir, self.grid_dim, self.num_gradients)
+        imagenet = ImageNet(image_dir, self.grid_dim)
         puzzle_pieces = imagenet.get_puzzle_pieces()
         original_image = imagenet.get_image()
 
