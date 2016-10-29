@@ -33,73 +33,89 @@ class Environment(object):
         self.num_gradients = num_channels
         self.stride = stride
         self.action = None
-        self.placed_pieces = []
-        self.action_affected_state = False
+        self.placed_location_for_id = dict()
+        self.id_for_placed_location = dict()
         self.terminal = False
         self.jigsaw_split = np.split(np.array(range(self.image_dim)), self.grid_dim)
 
-    def __update_placed_pieces(self, image_id, is_removal):
+    def __update_placed_pieces(self, image_id, place_id):
         """
-        Keeps track of what pieces have already been placed by removing a piece or adding a piece
-        to the jigsaw current solved image.
-        :param image_id: The "id" of the jigsaw piece to be placed or removed from
-                            the formed (intermediate) jigsaw image.
-        :param is_removal: True, if the piece is to be removed, False, if it is to be added.
+        Updates the jigsaw board
+        :param image_id: The image_id of the piece that needs to be placed
+        :param place_id: The place_id of the board location where the image is to be placed
         :return: None
         """
-        if is_removal:
-            self.remove_piece(image_id)
+        if image_id in self.placed_location_for_id:
+            self.remove_piece(image_id, self.placed_location_for_id[image_id])
+
+        if place_id in self.id_for_placed_location:
+            if self.id_for_placed_location[place_id] != image_id:
+                self.remove_piece(self.id_for_placed_location[place_id], place_id)
+                self.place_piece(image_id, place_id)
         else:
-            self.place_piece(image_id)
+            self.place_piece(image_id, place_id)
 
     def __update_state(self):
         """
         Updates the state space (self.gamestate) after the suggested action is taken
         :return: None
         """
-        image_id, jigwaw_range, removal = self.decode_action()
-        self.__update_placed_pieces(image_id, removal)
+        image_id, place_id = self.decode_action()
+        self.__update_placed_pieces(image_id, place_id)
+        self.__render_gamestate()
 
-        # update the next state only when it is required
-        if self.action_affected_state:
-            self.update_jigsaw(image_id, jigwaw_range, removal)
-            hog_gradients = hog(self.jigsaw_image,
-                                orientations=self.num_gradients,
-                                pixels_per_cell=self.window,
-                                cells_per_block=(1, 1), visualise=False)
-            hog_gradients = hog_gradients.resize((self.state_height, self.state_width, self.num_gradients))
-            assert self.gamestate.shape() == hog_gradients.shape(), "The state dimension is trying to be altered"
-            self.gamestate = hog_gradients
-
-    def remove_piece(self, image_id):
+    def __render_gamestate(self):
         """
-        Removes the piece from the jigsaw intermediately solved board
-        :param image_id: The id of the piece to be removed.
+        Renders the new gamestate based on the changed board condition using HOG gradients over sliding window
         :return: None
         """
-        if image_id in self.placed_pieces:
-            self.placed_pieces.remove(image_id)
-            self.action_affected_state = True
-        else:
-            self.action_affected_state = False
+        hog_gradients = hog(self.jigsaw_image,
+                            orientations=self.num_gradients,
+                            pixels_per_cell=self.window,
+                            cells_per_block=(1, 1), visualise=False)
+        hog_gradients = hog_gradients.resize((self.state_height, self.state_width, self.num_gradients))
+        assert self.gamestate.shape() == hog_gradients.shape(), "The state dimension is trying to be altered"
+        self.gamestate = hog_gradients
 
-    def place_piece(self, image_id):
+    def remove_piece(self, image_id, place_id):
         """
-        Places the piece on the jigsaw intermediately solved board.
-        :param image_id: The id of the piece to be added to the board.
-        :return:
+        Remove the piece from the jigsaw board
+        :param image_id: The id of the image to be removed
+        :param place_id: The place from where the image is to be removed from the jigsaw board
+        :return: None
         """
-        if image_id not in self.placed_pieces:
-            self.placed_pieces.append(image_id)
-            self.action_affected_state = True
-        else:
-            self.action_affected_state = False
+        self.placed_location_for_id.pop(image_id)
+        self.id_for_placed_location.pop(place_id)
+        placing_range = self.__get_placing_range(place_id)
+        self.update_jigsaw(image_id, placing_range, removal=True)
+
+    def place_piece(self, image_id, place_id):
+        """
+        Add the piece to the jigsaw board
+        :param image_id: The id of the image to be added to the board
+        :param place_id: The place on the board where the image is to be placed.
+        :return: None
+        """
+        self.placed_location_for_id[image_id] = place_id
+        self.id_for_placed_location[place_id] = image_id
+        placing_range = self.__get_placing_range(place_id)
+        self.update_jigsaw(image_id, placing_range, removal=False)
 
     def set_action(self, action):
+        """
+        Set the action that the agent suggests. This action is transmitted to the environment.
+        The environment then updates the next state of the agent.
+        :param action: The action to be transmitted to the environment
+        :return: None
+        """
         self.action = action
         self.__update_state()
 
     def __get_reward(self):
+        """
+        For the given action, transmitted to the environment by the agent, the environment rewards the agent.
+        :return: Reward given by the environment to the agent for the action taken
+        """
         # get the reward based on the afterstate
         if self.terminal:
             if self.jigsaw_image == self.original_image:
@@ -110,32 +126,64 @@ class Environment(object):
             return DELAY_REWARD
 
     def __get_next_state(self):
+        """
+        Returns the next state of the agent
+        :return: Next state of the agent
+        """
         return self.gamestate
 
     def __is_terminal(self):
+        """
+        Checks if the terminal state has been reached. Terminal state is reached, when all the pieces are
+        placed in the board.
+        :return: True, if terminal state reached, else False
+        """
         # check if self.gamestate is terminal
-        if len(self.placed_pieces) == len(self.puzzle_pieces):
+        if len(self.placed_location_for_id) == len(self.puzzle_pieces):
             self.terminal = True
         return self.terminal
 
     def get_state_reward_pair(self):
+        """
+        Return the (s,r, terminality) --> state, reward pair by the environment to the agent in response to the action
+        taken by the agent
+        :return: (state, reward, terminality) triple
+        """
         return self.__get_reward(), self.__get_next_state(), self.__is_terminal()
 
     def decode_action(self):
+        """
+        Decoded the action, and returns which piece is to be placed where
+        :return: (image_id, place_id)
+        """
         image_id = int(self.action / (self.state_height * self.state_width))
-        removal = False
-        if image_id in self.placed_pieces:
-            removal = True
         place_id = self.action % (self.state_height * self.state_height)
-        place_row = place_id / self.state_width
+
+        return image_id, place_id
+
+    def __get_placing_range(self, place_id):
+        """
+        Returns the placing range where the new image of the puzzle piece is to be placed.
+        :param place_id: The id of the place on the jigsaw grid where the piece is to be placed
+        :return: (row_start, row_end, col_start, col_end)
+        """
+        place_row = int(place_id / self.grid_dim)
+        place_col = place_id % self.grid_dim
 
         # get the range for placing the jigsaw piece in the jigsaw image
         row_range = self.jigsaw_split[place_row]
-        col_range = row_range
+        col_range = self.jigsaw_split[place_col]
 
-        return image_id, (row_range[0], row_range[-1], col_range[0], col_range[-1]), removal
+        return row_range[0], row_range[-1] + 1, col_range[0], col_range[-1] + 1
 
     def update_jigsaw(self, image_id, placing_range, removal):
+        """
+        Update the jigsaw board
+        :param image_id: The id of the puzzle piece to be placed/ removed
+        :param placing_range: The placing range where the image of puzzle piece should be placed /removed
+        :param removal: puzzle piece is to be placed or removed. True, means remove.
+        :return: None
+        """
         x_s, x_e, y_s, y_e = placing_range
         if removal:
             self.jigsaw_image[x_s:x_e, y_s, y_e] = np.zeros([x_e-x_s, y_e-y_s])
@@ -143,17 +191,35 @@ class Environment(object):
             self.jigsaw_image[x_s:x_e, y_s, y_e] = self.puzzle_pieces[image_id]
 
     def get_state(self):
+        """
+        return the current gamestate
+        :return: self.gamestate
+        """
         return self.gamestate
 
     def update_puzzle_pieces(self, puzzle_pieces):
+        """
+        Update the puzzle pieces for a new image
+        :param puzzle_pieces: The dictionary for image_id as key, and puzzle piece image as value
+        :return: None
+        """
         self.puzzle_pieces = puzzle_pieces
 
     def update_original_image(self, original_image):
+        """
+        Update the new image
+        :param original_image: The original image of the image under consideration for learning
+        :return: None
+        """
         self.original_image = original_image
 
     def reset(self):
+        """
+        Reset the environment, when a terminal state is reached.
+        :return: None
+        """
         self.jigsaw_image = np.zeros([self.image_dim, self.image_dim])
         self.gamestate = self.initial_gamestate
-        self.placed_pieces = []
-        self.action_affected_state = False
+        self.placed_location_for_id = dict()
+        self.id_for_placed_location = dict()
         self.terminal = False
