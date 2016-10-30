@@ -9,6 +9,7 @@ import numpy as np
 GAME = 'jigsaw'
 LEARNING_RATE = 1e-1
 INITIAL_EPSILON = 0.7
+FINAL_EPSILON = 0.05
 OBSERVE = 20
 REPLAY_MEMORY = 10
 BATCH = 5
@@ -197,9 +198,9 @@ class Agent(object):
 
             # perform gradient step
 
-            D = deque()
-            D.append((state, a_t, reward, state_new, terminal))
-            minibatch = random.sample(D, 1)
+            queue = deque()
+            queue.append((state, a_t, reward, state_new, terminal))
+            minibatch = random.sample(queue, 1)
 
             # get the batch variables
             s_batch = [d[0] for d in minibatch]
@@ -219,7 +220,9 @@ class Agent(object):
 
             self.sess.run(train_step, feed_dict={self.label: y_batch, self.action: a_batch, self.s: s_batch})
 
-            print y_batch, self.sess.run([self.readout_action], feed_dict={self.action: a_batch, self.s: s_batch}), reward, action_index
+            print y_batch, self.sess.run([self.readout_action],
+                                         feed_dict={self.action: a_batch,
+                                                    self.s: s_batch}), reward, action_index
 
             # if terminal state has reached, and number of tries per image has crossed threshold
             # then move to the new image
@@ -243,3 +246,7 @@ class Agent(object):
             # save progress every 10000 iterations
             if t % 1000 == 0:
                 saver.save(self.sess, 'saved_networks/' + GAME + '-dqn', global_step=t)
+
+            if t % 1000 == 0:
+                epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
+                print epsilon
