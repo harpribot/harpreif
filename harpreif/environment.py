@@ -2,7 +2,7 @@ import numpy as np
 from skimage.feature import hog
 from image_utils import sliding_window
 
-POSTIVE_REWARD = 1
+POSITIVE_REWARD = 1
 NEGATIVE_REWARD = -0.1
 DELAY_REWARD = -0.05
 STEPS_MAX = 10
@@ -73,16 +73,16 @@ class Environment(object):
         Renders the new gamestate based on the changed board condition using HOG gradients over sliding window
         :return: None
         """
-        slides = sliding_window(self.jigsaw_image, self.stride,self.window)
+        slides = sliding_window(self.jigsaw_image, self.stride, self.window)
 
         hog_gradients = []
         for slide in slides:
             window_image = slide[2]
 
             gradient = np.array(hog(window_image,
-                         orientations=self.num_gradients,
-                         pixels_per_cell=self.window,
-                         cells_per_block=(1, 1), visualise=False))
+                                    orientations=self.num_gradients,
+                                    pixels_per_cell=self.window,
+                                    cells_per_block=(1, 1), visualise=False))
 
             assert gradient.size == self.num_gradients, "Gradient size not equal to desired size"
             hog_gradients.extend(gradient)
@@ -128,17 +128,33 @@ class Environment(object):
         self.action = action
         self.__update_state()
 
+    def __get_normalized_image_diff(self):
+        """
+        Get the normalized image difference between the original image and jigsaw solved image. The negative of it is
+        reward
+        :return:The normalized reward
+        """
+        difference = self.jigsaw_image - self.original_image
+        squared_diff = difference ** 2
+        max_squared_diff = np.ones(self.jigsaw_image.shape) ** 2
+        normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
+        return -normalized_sum
+
     def __get_reward(self):
         """
         For the given action, transmitted to the environment by the agent, the environment rewards the agent.
         :return: Reward given by the environment to the agent for the action taken
         """
-        # get the reward based on the afterstate
+        # get the reward based on the after-state
+        '''
         if self.terminal:
             if np.all(self.jigsaw_image == self.original_image):
-                return POSTIVE_REWARD
+                return POSITIVE_REWARD
             else:
                 return NEGATIVE_REWARD
+        '''
+        if self.terminal:
+            return self.__get_normalized_image_diff()
         else:
             return DELAY_REWARD
 
@@ -155,16 +171,16 @@ class Environment(object):
         placed in the board.
         :return: None
         """
-        # check if self.gamestate is terminal
+        # check if self.game-state is terminal
         if len(self.placed_location_for_id) == len(self.puzzle_pieces):
             self.terminal = True
         print len(self.placed_location_for_id), len(self.puzzle_pieces)
 
     def get_state_reward_pair(self):
         """
-        Return the (s,r, terminality) --> state, reward pair by the environment to the agent in response to the action
+        Return the (s,r, terminal) --> state, reward pair by the environment to the agent in response to the action
         taken by the agent
-        :return: (state, reward, terminality) triple
+        :return: (state, reward, terminal) triple
         """
         self.steps += 1
         if self.steps >= STEPS_MAX:
@@ -215,7 +231,7 @@ class Environment(object):
         else:
             self.jigsaw_image[x_s:x_e, y_s:y_e] = self.puzzle_pieces[image_id]
 
-        assert self.jigsaw_image.shape == (256,256), "Trying to alter the image size"
+        assert self.jigsaw_image.shape == (256, 256), "Trying to alter the image size"
 
     def get_state(self):
         """
