@@ -21,7 +21,7 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 
-def conv1d(x, w, stride):
+def conv2d(x, w, stride):
     """
     This creates the 2D convolution layer
     :param x: The input placeholder to the convolution layer
@@ -29,7 +29,7 @@ def conv1d(x, w, stride):
     :param stride: The stride of the convolution layer
     :return: The convolution layer Tensorflow placeholder
     """
-    return tf.nn.conv2d(x, w, strides=stride, padding="SAME")
+    return tf.nn.conv2d(x, w, strides=[1, stride, stride, 1], padding="SAME")
 
 
 def max_pool_2x2(x):
@@ -38,4 +38,4 @@ def max_pool_2x2(x):
     :param x: The input to the maxpooling layer
     :return: The maxpooling layer Tensorflow placeholder
     """
-    return tf.nn.max_pool(x, ksize=[2, 2, 1, 1], strides=[2, 2, 1, 1], padding="SAME")
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")

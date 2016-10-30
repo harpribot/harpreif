@@ -7,7 +7,7 @@ def sliding_window(image, stepSize, windowSize):
     :return: Iterator of the image patch for the next sliding window
     """
     # slide a window across the image
-    for y in xrange(0, image.shape[0], stepSize):
-        for x in xrange(0, image.shape[1], stepSize):
+    for y in xrange(0, image.shape[0] - stepSize, stepSize):
+        for x in xrange(0, image.shape[1] - stepSize, stepSize):
             # yield the current window
             yield (x, y, image[y:y + windowSize[1], x:x + windowSize[0]])

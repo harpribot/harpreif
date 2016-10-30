@@ -1,9 +1,11 @@
 import numpy as np
 from skimage.feature import hog
+from image_utils import sliding_window
 
-POSTIVE_REWARD = 10
-NEGATIVE_REWARD = -10
-DELAY_REWARD = -1
+POSTIVE_REWARD = 1
+NEGATIVE_REWARD = -0.1
+DELAY_REWARD = -0.05
+STEPS_MAX = 10
 
 
 class Environment(object):
@@ -27,7 +29,7 @@ class Environment(object):
         self.grid_dim = grid_dim
         self.puzzle_pieces = puzzle_pieces
         self.image_dim = image_dim
-        self.state_height = self.gamestate[0]
+        self.state_height = self.gamestate.shape[0]
         self.state_width = self.state_height
         self.window = tuple(window)
         self.num_gradients = num_channels
@@ -37,6 +39,7 @@ class Environment(object):
         self.id_for_placed_location = dict()
         self.terminal = False
         self.jigsaw_split = np.split(np.array(range(self.image_dim)), self.grid_dim)
+        self.steps = 0
 
     def __update_placed_pieces(self, image_id, place_id):
         """
@@ -46,7 +49,8 @@ class Environment(object):
         :return: None
         """
         if image_id in self.placed_location_for_id:
-            self.remove_piece(image_id, self.placed_location_for_id[image_id])
+            if self.placed_location_for_id[image_id] != place_id:
+                self.remove_piece(image_id, self.placed_location_for_id[image_id])
 
         if place_id in self.id_for_placed_location:
             if self.id_for_placed_location[place_id] != image_id:
@@ -69,12 +73,25 @@ class Environment(object):
         Renders the new gamestate based on the changed board condition using HOG gradients over sliding window
         :return: None
         """
-        hog_gradients = hog(self.jigsaw_image,
-                            orientations=self.num_gradients,
-                            pixels_per_cell=self.window,
-                            cells_per_block=(1, 1), visualise=False)
-        hog_gradients = hog_gradients.resize((self.state_height, self.state_width, self.num_gradients))
-        assert self.gamestate.shape() == hog_gradients.shape(), "The state dimension is trying to be altered"
+        slides = sliding_window(self.jigsaw_image, self.stride,self.window)
+
+        hog_gradients = []
+        for slide in slides:
+            window_image = slide[2]
+
+            gradient = np.array(hog(window_image,
+                         orientations=self.num_gradients,
+                         pixels_per_cell=self.window,
+                         cells_per_block=(1, 1), visualise=False))
+
+            assert gradient.size == self.num_gradients, "Gradient size not equal to desired size"
+            hog_gradients.extend(gradient)
+
+        hog_gradients = np.array(hog_gradients)
+
+        hog_gradients = hog_gradients.reshape((self.state_height, self.state_width, self.num_gradients))
+
+        assert self.gamestate.shape == hog_gradients.shape, "The state dimension is trying to be altered"
         self.gamestate = hog_gradients
 
     def remove_piece(self, image_id, place_id):
@@ -118,7 +135,7 @@ class Environment(object):
         """
         # get the reward based on the afterstate
         if self.terminal:
-            if self.jigsaw_image == self.original_image:
+            if np.all(self.jigsaw_image == self.original_image):
                 return POSTIVE_REWARD
             else:
                 return NEGATIVE_REWARD
@@ -136,12 +153,12 @@ class Environment(object):
         """
         Checks if the terminal state has been reached. Terminal state is reached, when all the pieces are
         placed in the board.
-        :return: True, if terminal state reached, else False
+        :return: None
         """
         # check if self.gamestate is terminal
         if len(self.placed_location_for_id) == len(self.puzzle_pieces):
             self.terminal = True
-        return self.terminal
+        print len(self.placed_location_for_id), len(self.puzzle_pieces)
 
     def get_state_reward_pair(self):
         """
@@ -149,15 +166,23 @@ class Environment(object):
         taken by the agent
         :return: (state, reward, terminality) triple
         """
-        return self.__get_reward(), self.__get_next_state(), self.__is_terminal()
+        self.steps += 1
+        if self.steps >= STEPS_MAX:
+            self.terminal = True
+        else:
+            self.__is_terminal()
+
+        reward = self.__get_reward()
+        next_state = self.__get_next_state()
+        return reward, next_state, self.terminal
 
     def decode_action(self):
         """
         Decoded the action, and returns which piece is to be placed where
         :return: (image_id, place_id)
         """
-        image_id = int(self.action / (self.state_height * self.state_width))
-        place_id = self.action % (self.state_height * self.state_height)
+        image_id = int(self.action / (self.grid_dim * self.grid_dim))
+        place_id = self.action % (self.grid_dim * self.grid_dim)
 
         return image_id, place_id
 
@@ -186,9 +211,11 @@ class Environment(object):
         """
         x_s, x_e, y_s, y_e = placing_range
         if removal:
-            self.jigsaw_image[x_s:x_e, y_s, y_e] = np.zeros([x_e-x_s, y_e-y_s])
+            self.jigsaw_image[x_s:x_e, y_s:y_e] = np.zeros([x_e-x_s, y_e-y_s])
         else:
-            self.jigsaw_image[x_s:x_e, y_s, y_e] = self.puzzle_pieces[image_id]
+            self.jigsaw_image[x_s:x_e, y_s:y_e] = self.puzzle_pieces[image_id]
+
+        assert self.jigsaw_image.shape == (256,256), "Trying to alter the image size"
 
     def get_state(self):
         """
@@ -223,3 +250,4 @@ class Environment(object):
         self.placed_location_for_id = dict()
         self.id_for_placed_location = dict()
         self.terminal = False
+        self.steps = 0

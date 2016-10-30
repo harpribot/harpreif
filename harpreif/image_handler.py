@@ -2,6 +2,7 @@ from scipy import ndimage
 import glob
 import image_slicer
 from skimage import io
+from skimage.color import rgb2gray
 
 
 class ImageNet(object):
@@ -27,18 +28,20 @@ class ImageNet(object):
         Indexes all the images in the imagenet needed for training.
         :return: None
         """
-        self.image_list = [self.image_dir + '/' + x for x in glob.glob('*.JPEG')]
+        self.image_list = [x for x in glob.glob(self.image_dir + '/' +'*.jpg')]
 
     def load_next_image(self):
         """
         Loads next image from imagenet index for training.
         :return: None
         """
-        self.image = ndimage.imread(self.image_list[self.image_ptr])
+        self.image = rgb2gray(ndimage.imread(self.image_list[self.image_ptr]))
+        assert self.image.shape == (256,256), 'Image not 256 x 256'
+        self.__break_into_jigzaw_pieces()
         self.image_ptr += 1
         self.tries = 0
 
-    def break_into_jigzaw_pieces(self):
+    def __break_into_jigzaw_pieces(self):
         """
         Break the image into jigsaw pieces
         :return: None
@@ -55,7 +58,7 @@ class ImageNet(object):
         """
         result = dict()
         for piece_id, image_loc in enumerate(self.tile_locations):
-            result[piece_id] = io.imread(image_loc)
+            result[piece_id] = rgb2gray(io.imread(image_loc))
 
         return result
 
@@ -86,6 +89,6 @@ class ImageNet(object):
         :param tile: The tile object created for the image with specified grid dimensions
         :return: tile_loc => The file location of the tiles
         """
-        tile_str = [x[1].strip() for x in str(tile)[1:-1].split('-')]
+        tile_str = [str(x)[1:-1].split('-')[1].strip() for x in tile]
         tile_loc = [self.image_dir + '/' + x for x in tile_str]
         return tile_loc

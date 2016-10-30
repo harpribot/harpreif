@@ -1,5 +1,5 @@
 import tensorflow as tf
-from network_utils import weight_variable, bias_variable, conv1d, max_pool_2x2
+from network_utils import weight_variable, bias_variable, conv2d, max_pool_2x2
 from collections import deque
 from image_handler import ImageNet
 from environment import Environment
@@ -7,16 +7,16 @@ import random
 import numpy as np
 
 GAME = 'jigsaw'
-LEARNING_RATE = 1e-6
-INITIAL_EPSILON = 0.0001
-OBSERVE = 1
-REPLAY_MEMORY = 1
-BATCH = 1
+LEARNING_RATE = 1e-1
+INITIAL_EPSILON = 0.7
+OBSERVE = 20
+REPLAY_MEMORY = 10
+BATCH = 5
 GAMMA = 0.99
-WINDOW_SIZE = [10, 10]
+WINDOW_SIZE = [8, 8]
 SLIDING_STRIDE = WINDOW_SIZE[0]/2
 IMAGE_HEIGHT = IMAGE_WIDTH = 256
-TRIES_PER_IMAGE = 100
+TRIES_PER_IMAGE = 10
 
 
 class Agent(object):
@@ -33,19 +33,22 @@ class Agent(object):
         self.grid_dim = grid_dim
         self.num_gradients = num_gradients
         self.num_actions = num_actions
-        self.input_height = len(range(0, IMAGE_HEIGHT, SLIDING_STRIDE))
+        self.input_height = len(range(0, IMAGE_HEIGHT - SLIDING_STRIDE, SLIDING_STRIDE))
         self.input_width = self.input_height
         self.input_channels = self.num_gradients
         self.sess = None
 
-    def play_game(self):
+    def play_game(self, image_dir):
         """
         Initiates gameplay using DQN based reinforcement learning
         :return: None
         """
+        print 'Initializing Session...'
         self.sess = tf.InteractiveSession()
+        print 'Creating Network...'
         self.__create_network()
-        self.__train_network()
+        print 'Training Network...'
+        self.__train_network(image_dir)
 
     def __initialize_weights_and_biases(self):
         """
@@ -61,7 +64,7 @@ class Agent(object):
         self.W_conv3 = weight_variable([3, 4, 64, 128])
         self.b_conv3 = bias_variable([128])
 
-        self.W_fc1 = weight_variable([self.input_height * self.input_width, 4096])
+        self.W_fc1 = weight_variable([2048, 4096])
         self.b_fc1 = bias_variable([4096])
 
         self.W_fc2 = weight_variable([4096, 512])
@@ -94,17 +97,17 @@ class Agent(object):
         Forms 3 convolution layers, with a max-pooling layer after first convolution layer.
         :return: None
         """
-        self.h_conv1 = tf.nn.relu(conv1d(self.s, self.W_conv1, 4) + self.b_conv1)
+        self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 4) + self.b_conv1)
         self.h_pool1 = max_pool_2x2(self.h_conv1)
 
-        self.h_conv2 = tf.nn.relu(conv1d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
+        self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
         # h_pool2 = max_pool_2x2(h_conv2)
 
-        self.h_conv3 = tf.nn.relu(conv1d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
+        self.h_conv3 = tf.nn.relu(conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
         # h_pool3 = max_pool_2x2(h_conv3)
 
         # h_pool3_flat = tf.reshape(h_pool3, [-1, 256])
-        self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, self.input_height * self.input_width])
+        self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, 2048])
 
     def __form_fully_connected_layers(self):
         """
@@ -148,19 +151,17 @@ class Agent(object):
 
         train_step = tf.train.AdadeltaOptimizer(LEARNING_RATE).minimize(self.cost)
 
-        # observe
-        replay_memory = deque()
-
         # train
         # get the start state of the network
         imagenet = ImageNet(image_dir, self.grid_dim)
+        imagenet.load_next_image()
         puzzle_pieces = imagenet.get_puzzle_pieces()
         original_image = imagenet.get_image()
 
         state = np.zeros([self.input_height, self.input_width, self.input_channels])
 
         # initialize the environment
-        env = Environment(original_image, puzzle_pieces, self.grid_dim,
+        env = Environment(original_image, state, self.grid_dim, puzzle_pieces,
                           IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
                           self.input_channels)
 
@@ -194,42 +195,36 @@ class Agent(object):
             env.set_action(action_index)
             reward, state_new, terminal = env.get_state_reward_pair()
 
-            replay_memory.append((state, a_t, reward, state_new, terminal))
+            # perform gradient step
 
-            if len(replay_memory) > REPLAY_MEMORY:
-                replay_memory.popleft()
+            D = deque()
+            D.append((state, a_t, reward, state_new, terminal))
+            minibatch = random.sample(D, 1)
 
-            if t >= OBSERVE:
-                # sample a minibatch for training
-                minibatch = random.sample(replay_memory, BATCH)
+            # get the batch variables
+            s_batch = [d[0] for d in minibatch]
+            a_batch = [d[1] for d in minibatch]
+            r_batch = [d[2] for d in minibatch]
+            s_new_batch = [d[3] for d in minibatch]
 
-                # get the batch variables
-                state_j_batch = [d[0] for d in minibatch]
-                action_batch = [d[1] for d in minibatch]
-                reward_batch = [d[2] for d in minibatch]
-                state_j1_batch = [d[3] for d in minibatch]
+            y_batch = []
+            readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
+            for i in range(0, len(minibatch)):
+                terminal = minibatch[i][4]
+                # if terminal, only equals reward
+                if terminal:
+                    y_batch.append(r_batch[i])
+                else:
+                    y_batch.append(r_batch[i] + GAMMA * np.max(readout_new_batch[i]))
 
-                y_batch = []
-                readout_j1_batch = self.readout.eval(feed_dict={self.s: state_j1_batch})
+            self.sess.run(train_step, feed_dict={self.label: y_batch, self.action: a_batch, self.s: s_batch})
 
-                for i in range(0, len(minibatch)):
-                    terminal = minibatch[i][4]
-                    # if terminal, only equals reward
-                    if terminal:
-                        y_batch.append(reward_batch[i])
-                    else:
-                        y_batch.append(reward_batch[i] + GAMMA * np.max(readout_j1_batch[i]))
-
-                # perform gradient step
-                train_step.run(feed_dict={
-                    self.label: y_batch,
-                    self.action: action_batch,
-                    self.s: state_j_batch}
-                )
+            print y_batch, self.sess.run([self.readout_action], feed_dict={self.action: a_batch, self.s: s_batch}), reward, action_index
 
             # if terminal state has reached, and number of tries per image has crossed threshold
             # then move to the new image
             if terminal:
+                print 'TERMINAL REACHED'
                 if imagenet.get_tries_per_image() == TRIES_PER_IMAGE:
                     imagenet.load_next_image()
                     puzzle_pieces = imagenet.get_puzzle_pieces()
@@ -246,5 +241,5 @@ class Agent(object):
             t += 1
 
             # save progress every 10000 iterations
-            if t % 10000 == 0:
+            if t % 1000 == 0:
                 saver.save(self.sess, 'saved_networks/' + GAME + '-dqn', global_step=t)
