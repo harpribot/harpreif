@@ -28,7 +28,7 @@ class ImageNet(object):
         Indexes all the images in the imagenet needed for training.
         :return: None
         """
-        self.image_list = [x for x in glob.glob(self.image_dir + '/' +'*.jpg')]
+        self.image_list = [x for x in glob.glob(self.image_dir + '/' + '*.jpg')]
 
     def load_next_image(self):
         """
@@ -36,7 +36,7 @@ class ImageNet(object):
         :return: None
         """
         self.image = rgb2gray(ndimage.imread(self.image_list[self.image_ptr]))
-        assert self.image.shape == (256,256), 'Image not 256 x 256'
+        assert self.image.shape == (256, 256), 'Image not 256 x 256'
         self.__break_into_jigzaw_pieces()
         self.image_ptr += 1
         self.tries = 0

@@ -9,5 +9,3 @@ num_gradients = 8
 
 agent = Agent(num_actions, grid_dim, num_gradients)
 agent.play_game(image_dir)
-
-
