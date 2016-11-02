@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def sliding_window(image, step_size, window_size):
     """
     This creates an iterator for the sliding window in the row major format for a given image.
@@ -11,3 +14,14 @@ def sliding_window(image, step_size, window_size):
         for x in xrange(0, image.shape[1] - step_size, step_size):
             # yield the current window
             yield (x, y, image[y:y + window_size[1], x:x + window_size[0]])
+
+
+def gradient_discretizer(gradient, bins):
+    """
+    Digitizes the gradient to limit the state space, otherwise there are infinite possible gradient values
+    :param gradient: The numpy array of gradient across provided orientations
+    :param bins: The bins range in which the gradient is to be discretized into
+    :return: The numpy array of bin indices in which each gradient falls into. Return size same as gradient size
+    """
+    return np.digitize(gradient, bins)
+

@@ -1,11 +1,12 @@
 import numpy as np
 from skimage.feature import hog
-from image_utils import sliding_window
+from image_utils import sliding_window, gradient_discretizer
 
 POSITIVE_REWARD = 1
 NEGATIVE_REWARD = -0.1
 DELAY_REWARD = -0.05
 STEPS_MAX = 10
+NUM_BINS = 64
 
 
 class Environment(object):
@@ -22,6 +23,7 @@ class Environment(object):
         :param stride: The stride of the sliding window for HOG
         :param num_channels: The number of channels of the state space (= number of gradients given by HOG)
         """
+        self.bins = np.array([x/float(NUM_BINS) for x in range(0, NUM_BINS, 1)])
         self.original_image = original_image
         self.jigsaw_image = np.zeros([image_dim, image_dim])
         self.initial_gamestate = initial_gamestate
@@ -85,6 +87,7 @@ class Environment(object):
                                     cells_per_block=(1, 1), visualise=False))
 
             assert gradient.size == self.num_gradients, "Gradient size not equal to desired size"
+            gradient = gradient_discretizer(gradient, self.bins)
             hog_gradients.extend(gradient)
 
         hog_gradients = np.array(hog_gradients)
