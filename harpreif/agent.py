@@ -11,9 +11,9 @@ GAME = 'jigsaw'
 LEARNING_RATE = 1e-2
 INITIAL_EPSILON = 0.4
 FINAL_EPSILON = 0.05
-OBSERVE = 20
-REPLAY_MEMORY = 10
-BATCH = 5
+OBSERVE = 1000
+REPLAY_MEMORY = 500
+BATCH_SIZE = 32
 GAMMA = 0.99
 WINDOW_SIZE = [8, 8]
 SLIDING_STRIDE = WINDOW_SIZE[0]/2
@@ -37,7 +37,6 @@ class Agent(object):
         self.num_actions = num_actions
         self.input_height = len(range(0, IMAGE_HEIGHT - SLIDING_STRIDE, SLIDING_STRIDE))
         self.input_width = self.input_height
-        print self.input_height, self.input_width
         self.input_channels = self.num_gradients
         self.sess = None
         self.train_dir = None
@@ -200,43 +199,46 @@ class Agent(object):
         epsilon = INITIAL_EPSILON
         t = 0
 
+        # Initialize the replay memory
+        replay_memory = deque()
+
         while True:
             # choose an action epsilon greedily
             readout_t = self.readout.eval(feed_dict={self.s: [state]})
-            a_t = np.zeros([self.num_actions])
+            a_t, action_index = self.__greedy_action(readout_t, epsilon)
 
-            if random.random() <= epsilon:
-                action_index = random.randrange(self.num_actions)
-            else:
-                action_index = np.argmax(readout_t)
-
-            a_t[action_index] = 1
+            # update the environment with new action
             env.set_action(action_index)
+
+            # get the reward and next state from the environment
             reward, state_new, terminal = env.get_state_reward_pair()
 
-            # perform gradient step
+            # store the transition in replay memory
+            replay_memory.append((state, a_t, reward, state_new, terminal))
 
-            queue = deque()
-            queue.append((state, a_t, reward, state_new, terminal))
-            minibatch = random.sample(queue, 1)
+            if len(replay_memory) > REPLAY_MEMORY:
+                replay_memory.popleft()
 
-            # get the batch variables
-            s_batch = [d[0] for d in minibatch]
-            a_batch = [d[1] for d in minibatch]
-            r_batch = [d[2] for d in minibatch]
-            s_new_batch = [d[3] for d in minibatch]
+            if t > OBSERVE:
+                minibatch = random.sample(replay_memory, BATCH_SIZE)
 
-            y_batch = []
-            readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
-            for i in range(0, len(minibatch)):
-                terminal = minibatch[i][4]
-                # if terminal, only equals reward
-                if terminal:
-                    y_batch.append(r_batch[i])
-                else:
-                    y_batch.append(r_batch[i] + GAMMA * np.max(readout_new_batch[i]))
+                # get the batch variables
+                s_batch = [d[0] for d in minibatch]
+                a_batch = [d[1] for d in minibatch]
+                r_batch = [d[2] for d in minibatch]
+                s_new_batch = [d[3] for d in minibatch]
 
-            self.sess.run(train_step, feed_dict={self.label: y_batch, self.action: a_batch, self.s: s_batch})
+                y_batch = []
+                readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
+                for i in range(0, len(minibatch)):
+                    terminal = minibatch[i][4]
+                    # if terminal, only equals reward
+                    if terminal:
+                        y_batch.append(r_batch[i])
+                    else:
+                        y_batch.append(r_batch[i] + GAMMA * np.max(readout_new_batch[i]))
+
+                self.sess.run(train_step, feed_dict={self.label: y_batch, self.action: a_batch, self.s: s_batch})
 
             '''
             print y_batch, self.sess.run([self.readout_action],
@@ -269,8 +271,9 @@ class Agent(object):
                 saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
                 # test the network on the validation data
                 self.test_network()
-
-            if t % 1000 == 0:
+            if t % 100 == 0:
+                print t
+            if t % 2000 == 0:
                 epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
 
     def test_network(self):
@@ -296,11 +299,8 @@ class Agent(object):
         while True:
             # choose an action epsilon greedily
             readout_t = self.readout.eval(feed_dict={self.s: [state]})
-            a_t = np.zeros([self.num_actions])
+            a_t, action_index = self.__greedy_action(readout_t, epsilon=0.0)
 
-            action_index = np.argmax(readout_t)
-
-            a_t[action_index] = 1
             env.set_action(action_index)
             reward, state_new, terminal = env.get_state_reward_pair()
 
@@ -328,3 +328,15 @@ class Agent(object):
 
         # display the reward and image matching performance statistics
         performance_statistics(image_diff_list, reward_list)
+
+    def __greedy_action(self, value_function, epsilon):
+        a_t = np.zeros([self.num_actions])
+
+        if random.random() < epsilon:
+            action_index = random.randrange(self.num_actions)
+        else:
+            action_index = np.argmax(value_function)
+
+        a_t[action_index] = 1
+
+        return a_t, action_index
