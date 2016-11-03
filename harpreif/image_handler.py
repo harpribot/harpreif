@@ -38,9 +38,10 @@ class ImageNet(object):
         if len(self.image_list) == self.image_ptr:
             return False
         self.image = ndimage.imread(self.image_list[self.image_ptr])
+        print self.image.shape
         is_color = self.__check_color()
         if is_color:
-            self.image = rgb2gray(ndimage.imread(self.image_list[self.image_ptr]))
+            self.image = rgb2gray(self.image)
 
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
         self.__break_into_jigzaw_pieces()
