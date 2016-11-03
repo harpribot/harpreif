@@ -265,7 +265,7 @@ class Agent(object):
             t += 1
 
             # save progress every 10000 iterations
-            if t % 1000 == 0:
+            if t % 10000 == 0:
                 saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
                 # test the network on the validation data
                 self.test_network()
