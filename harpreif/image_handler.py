@@ -37,13 +37,29 @@ class ImageNet(object):
         """
         if len(self.image_list) == self.image_ptr:
             return False
-        self.image = rgb2gray(ndimage.imread(self.image_list[self.image_ptr]))
+        self.image = ndimage.imread(self.image_list[self.image_ptr])
+        is_color = self.__check_color()
+        if is_color:
+            self.image = rgb2gray(ndimage.imread(self.image_list[self.image_ptr]))
+
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
         self.__break_into_jigzaw_pieces()
         self.image_ptr += 1
         self.tries = 0
 
         return True
+
+    def __check_color(self):
+        """
+        Checks if the input image is color image or not
+        :return: True, if the image is color, False if the image is grayscale
+        """
+        if self.image.shape == (256,256,3):
+            return True
+        elif self.image.shape == (356, 256):
+            return False
+        else:
+            raise TypeError('The image is not of standard dimension')
 
     def __break_into_jigzaw_pieces(self):
         """
