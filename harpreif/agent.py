@@ -9,7 +9,7 @@ import numpy as np
 
 GAME = 'jigsaw'
 LEARNING_RATE = 1e-2
-INITIAL_EPSILON = 0.5
+INITIAL_EPSILON = 0.4
 FINAL_EPSILON = 0.05
 OBSERVE = 20
 REPLAY_MEMORY = 10
@@ -37,6 +37,7 @@ class Agent(object):
         self.num_actions = num_actions
         self.input_height = len(range(0, IMAGE_HEIGHT - SLIDING_STRIDE, SLIDING_STRIDE))
         self.input_width = self.input_height
+        print self.input_height, self.input_width
         self.input_channels = self.num_gradients
         self.sess = None
         self.train_dir = None
@@ -67,19 +68,19 @@ class Agent(object):
         Creates the layers to be used by the DQN network, and initializes their weights and biases
         :return: None
         """
-        self.W_conv1 = weight_variable([8, 8, self.input_channels, 32])
-        self.b_conv1 = bias_variable([32])
+        self.W_conv1 = weight_variable([4, 4, self.input_channels, 16])
+        self.b_conv1 = bias_variable([16])
 
-        self.W_conv2 = weight_variable([4, 4, 32, 64])
-        self.b_conv2 = bias_variable([64])
+        self.W_conv2 = weight_variable([4, 4, 16, 32])
+        self.b_conv2 = bias_variable([32])
 
-        self.W_conv3 = weight_variable([3, 4, 64, 128])
-        self.b_conv3 = bias_variable([128])
+        self.W_conv3 = weight_variable([2, 2, 32, 32])
+        self.b_conv3 = bias_variable([32])
 
-        self.W_fc1 = weight_variable([2048, 4096])
-        self.b_fc1 = bias_variable([4096])
+        self.W_fc1 = weight_variable([2048, 1024])
+        self.b_fc1 = bias_variable([1024])
 
-        self.W_fc2 = weight_variable([4096, 512])
+        self.W_fc2 = weight_variable([1024, 512])
         self.b_fc2 = bias_variable([512])
 
         self.W_fc3 = weight_variable([512, self.num_actions])
@@ -109,17 +110,23 @@ class Agent(object):
         Forms 3 convolution layers, with a max-pooling layer after first convolution layer.
         :return: None
         """
-        self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 4) + self.b_conv1)
+        #print self.s.get_shape()
+        self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 2) + self.b_conv1)
+        #print self.h_conv1.get_shape()
         self.h_pool1 = max_pool_2x2(self.h_conv1)
+        #print self.h_pool1.get_shape()
 
         self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
+        #print self.h_conv2.get_shape()
         # h_pool2 = max_pool_2x2(h_conv2)
 
         self.h_conv3 = tf.nn.relu(conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
+        #print self.h_conv3.get_shape()
         # h_pool3 = max_pool_2x2(h_conv3)
 
         # h_pool3_flat = tf.reshape(h_pool3, [-1, 256])
         self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, 2048])
+        #print self.h_conv3_flat.get_shape()
 
     def __form_fully_connected_layers(self):
         """
@@ -127,8 +134,10 @@ class Agent(object):
         :return: None
         """
         self.h_fc1 = tf.nn.relu(tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1)
+        #print self.h_fc1.get_shape()
 
         self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
+        #print self.h_fc2.get_shape()
 
     def __form_output_layer(self):
         """
@@ -136,6 +145,7 @@ class Agent(object):
         :return: None
         """
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
+        #print self.readout.get_shape()
 
     def __create_network(self):
         """
@@ -196,7 +206,6 @@ class Agent(object):
             a_t = np.zeros([self.num_actions])
 
             if random.random() <= epsilon:
-                print '-----RANDOM ACTION-----'
                 action_index = random.randrange(self.num_actions)
             else:
                 action_index = np.argmax(readout_t)
@@ -229,14 +238,14 @@ class Agent(object):
 
             self.sess.run(train_step, feed_dict={self.label: y_batch, self.action: a_batch, self.s: s_batch})
 
+            '''
             print y_batch, self.sess.run([self.readout_action],
                                          feed_dict={self.action: a_batch,
                                                     self.s: s_batch}), reward, action_index
-
+            '''
             # if terminal state has reached, and number of tries per image has crossed threshold
             # then move to the new image
             if terminal:
-                print 'TERMINAL REACHED'
                 if imagenet.get_tries_per_image() == TRIES_PER_IMAGE:
                     image_present = imagenet.load_next_image()
                     if image_present:
@@ -263,7 +272,6 @@ class Agent(object):
 
             if t % 1000 == 0:
                 epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
-                print epsilon
 
     def test_network(self):
         """
@@ -300,7 +308,6 @@ class Agent(object):
 
             # if terminal state has reached, then move to the next image
             if terminal:
-                print 'TERMINAL REACHED'
                 image_diff_list.append(env.get_normalized_image_diff())
                 reward_list.append(episode_reward)
 

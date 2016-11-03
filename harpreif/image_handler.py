@@ -37,8 +37,8 @@ class ImageNet(object):
         """
         if len(self.image_list) == self.image_ptr:
             return False
+        print 'Loaded New Image'
         self.image = ndimage.imread(self.image_list[self.image_ptr])
-        print self.image.shape
         is_color = self.__check_color()
         if is_color:
             self.image = rgb2gray(self.image)

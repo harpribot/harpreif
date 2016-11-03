@@ -175,7 +175,6 @@ class Environment(object):
         # check if self.game-state is terminal
         if len(self.placed_location_for_id) == len(self.puzzle_pieces):
             self.terminal = True
-        print len(self.placed_location_for_id), len(self.puzzle_pieces)
 
     def get_state_reward_pair(self):
         """
