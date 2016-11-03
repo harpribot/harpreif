@@ -2,10 +2,8 @@ import numpy as np
 from skimage.feature import hog
 from image_utils import sliding_window, gradient_discretizer
 
-POSITIVE_REWARD = 1
-NEGATIVE_REWARD = -0.1
 DELAY_REWARD = -0.05
-STEPS_MAX = 10
+STEPS_MAX = 20
 NUM_BINS = 64
 
 
@@ -131,7 +129,7 @@ class Environment(object):
         self.action = action
         self.__update_state()
 
-    def __get_normalized_image_diff(self):
+    def get_normalized_image_diff(self):
         """
         Get the normalized image difference between the original image and jigsaw solved image. The negative of it is
         reward
@@ -157,7 +155,7 @@ class Environment(object):
                 return NEGATIVE_REWARD
         '''
         if self.terminal:
-            return self.__get_normalized_image_diff()
+            return self.get_normalized_image_diff()
         else:
             return DELAY_REWARD
 

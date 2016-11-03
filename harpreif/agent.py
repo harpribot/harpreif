@@ -3,12 +3,13 @@ from network_utils import weight_variable, bias_variable, conv2d, max_pool_2x2
 from collections import deque
 from image_handler import ImageNet
 from environment import Environment
+from image_utils import performance_statistics
 import random
 import numpy as np
 
 GAME = 'jigsaw'
-LEARNING_RATE = 1e-1
-INITIAL_EPSILON = 0.7
+LEARNING_RATE = 1e-2
+INITIAL_EPSILON = 0.5
 FINAL_EPSILON = 0.05
 OBSERVE = 20
 REPLAY_MEMORY = 10
@@ -38,18 +39,28 @@ class Agent(object):
         self.input_width = self.input_height
         self.input_channels = self.num_gradients
         self.sess = None
+        self.train_dir = None
+        self.val_dir = None
+        self.test_dir = None
+        self.checkpoint_dir = None
 
-    def play_game(self, image_dir):
+    def play_game(self, train_dir, val_dir, checkpoint_dir):
         """
         Initiates gameplay using DQN based reinforcement learning
+        :param train_dir: The directory containing the training images
+        :param val_dir: The directory containing the testing images
+        :param checkpoint_dir: The directory where checkpoints are to be stored.
         :return: None
         """
+        self.train_dir = train_dir
+        self.val_dir = val_dir
+        self.checkpoint_dir = checkpoint_dir
         print 'Initializing Session...'
         self.sess = tf.InteractiveSession()
         print 'Creating Network...'
         self.__create_network()
         print 'Training Network...'
-        self.__train_network(image_dir)
+        self.__train_network()
 
     def __initialize_weights_and_biases(self):
         """
@@ -136,11 +147,9 @@ class Agent(object):
         self.__form_hidden_layers()
         self.__form_output_layer()
 
-    def __train_network(self, image_dir):
+    def __train_network(self):
         """
         Trains the DQN network
-        :param image_dir: The location of the imagenet directory consisting of just the images. No labels required here.
-                        As this is a unsupervized representation learning problem.
         :return: None
         """
         # define the cost function
@@ -154,7 +163,7 @@ class Agent(object):
 
         # train
         # get the start state of the network
-        imagenet = ImageNet(image_dir, self.grid_dim)
+        imagenet = ImageNet(self.train_dir, self.grid_dim)
         imagenet.load_next_image()
         puzzle_pieces = imagenet.get_puzzle_pieces()
         original_image = imagenet.get_image()
@@ -169,7 +178,7 @@ class Agent(object):
         # saving and loading networks
         saver = tf.train.Saver()
         self.sess.run(tf.initialize_all_variables())
-        checkpoint = tf.train.get_checkpoint_state("saved_networks")
+        checkpoint = tf.train.get_checkpoint_state(self.checkpoint_dir + "saved_networks")
 
         if checkpoint and checkpoint.model_checkpoint_path:
             saver.restore(self.sess, checkpoint.model_checkpoint_path)
@@ -229,11 +238,14 @@ class Agent(object):
             if terminal:
                 print 'TERMINAL REACHED'
                 if imagenet.get_tries_per_image() == TRIES_PER_IMAGE:
-                    imagenet.load_next_image()
-                    puzzle_pieces = imagenet.get_puzzle_pieces()
-                    original_image = imagenet.get_image()
-                    env.update_puzzle_pieces(puzzle_pieces)
-                    env.update_original_image(original_image)
+                    image_present = imagenet.load_next_image()
+                    if image_present:
+                        puzzle_pieces = imagenet.get_puzzle_pieces()
+                        original_image = imagenet.get_image()
+                        env.update_puzzle_pieces(puzzle_pieces)
+                        env.update_original_image(original_image)
+                    else:
+                        break
                 else:
                     imagenet.increment_tries()
 
@@ -245,8 +257,67 @@ class Agent(object):
 
             # save progress every 10000 iterations
             if t % 1000 == 0:
-                saver.save(self.sess, 'saved_networks/' + GAME + '-dqn', global_step=t)
+                saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
+                # test the network on the validation data
+                self.test_network()
 
             if t % 1000 == 0:
                 epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
                 print epsilon
+
+    def test_network(self):
+        """
+        Network Testing is done on the validation data, and the testing data is to see if the representation
+        is learnt efficiently. Testing data is not meant to check RL accuracy. The validation data is meant for that.
+        Testing data is meant to check if the algorithm learnt feature representations of objects.
+        :return: None
+        """
+        imagenet = ImageNet(self.val_dir, self.grid_dim)
+        imagenet.load_next_image()
+        puzzle_pieces = imagenet.get_puzzle_pieces()
+        original_image = imagenet.get_image()
+        state = np.zeros([self.input_height, self.input_width, self.input_channels])
+        env = Environment(original_image, state, self.grid_dim, puzzle_pieces,
+                          IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
+                          self.input_channels)
+
+        reward_list = []
+        image_diff_list = []
+        episode_reward = 0.0
+
+        while True:
+            # choose an action epsilon greedily
+            readout_t = self.readout.eval(feed_dict={self.s: [state]})
+            a_t = np.zeros([self.num_actions])
+
+            action_index = np.argmax(readout_t)
+
+            a_t[action_index] = 1
+            env.set_action(action_index)
+            reward, state_new, terminal = env.get_state_reward_pair()
+
+            episode_reward = reward + GAMMA * episode_reward
+
+            # if terminal state has reached, then move to the next image
+            if terminal:
+                print 'TERMINAL REACHED'
+                image_diff_list.append(env.get_normalized_image_diff())
+                reward_list.append(episode_reward)
+
+                image_present = imagenet.load_next_image()
+
+                if image_present:
+                    puzzle_pieces = imagenet.get_puzzle_pieces()
+                    original_image = imagenet.get_image()
+                    env.update_puzzle_pieces(puzzle_pieces)
+                    env.update_original_image(original_image)
+                    env.reset()
+                    episode_reward = 0.0
+                else:
+                    break
+
+            # update the old values
+            state = env.get_state()
+
+        # display the reward and image matching performance statistics
+        performance_statistics(image_diff_list, reward_list)

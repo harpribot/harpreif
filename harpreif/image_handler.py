@@ -9,7 +9,7 @@ class ImageNet(object):
     def __init__(self, image_dir, grid_dim):
         """
 
-        :param image_dir: The directory containing all the resized 256 x 256 images of imagenet.
+        :param image_dir: The directory containing all the resized 256 x 256 images of train.
         :param grid_dim: The number of horizontal and vertical cuts required to form the jigsaw piece
         """
         self.image_dir = image_dir
@@ -25,21 +25,25 @@ class ImageNet(object):
 
     def __index_images(self):
         """
-        Indexes all the images in the imagenet needed for training.
+        Indexes all the images in the train needed for training.
         :return: None
         """
         self.image_list = [x for x in glob.glob(self.image_dir + '/' + '*.jpg')]
 
     def load_next_image(self):
         """
-        Loads next image from imagenet index for training.
-        :return: None
+        Loads next image from train index for training.
+        :return: True if the next image is present, else False
         """
+        if len(self.image_list) == self.image_ptr:
+            return False
         self.image = rgb2gray(ndimage.imread(self.image_list[self.image_ptr]))
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
         self.__break_into_jigzaw_pieces()
         self.image_ptr += 1
         self.tries = 0
+
+        return True
 
     def __break_into_jigzaw_pieces(self):
         """
@@ -78,7 +82,7 @@ class ImageNet(object):
 
     def get_image(self):
         """
-        Get the imagenet image that the RL algo is currently training one
+        Get the train image that the RL algo is currently training one
         :return: self.image
         """
         return self.image

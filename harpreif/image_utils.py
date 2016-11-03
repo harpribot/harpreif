@@ -25,3 +25,11 @@ def gradient_discretizer(gradient, bins):
     """
     return np.digitize(gradient, bins)
 
+
+def performance_statistics(image_diff_list, reward_list):
+    image_diff_list = np.array(image_diff_list)
+    reward_list = np.array(reward_list)
+
+    print 'The image matching performance - %f' % np.average(image_diff_list)
+    print 'The average accumulated reward - %f' % np.average(reward_list)
+
