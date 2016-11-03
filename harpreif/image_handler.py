@@ -1,7 +1,7 @@
 from scipy import ndimage
 import glob
 import image_slicer
-from skimage import io
+import numpy as np
 from skimage.color import rgb2gray
 
 
@@ -55,9 +55,9 @@ class ImageNet(object):
         Checks if the input image is color image or not
         :return: True, if the image is color, False if the image is grayscale
         """
-        if self.image.shape == (256,256,3):
+        if self.image.shape == (256, 256, 3):
             return True
-        elif self.image.shape == (356, 256):
+        elif self.image.shape == (256, 256):
             return False
         else:
             raise TypeError('The image is not of standard dimension')
@@ -68,8 +68,7 @@ class ImageNet(object):
         :return: None
         """
         image_loc = self.image_list[self.image_ptr]
-        tile = image_slicer.slice(image_loc, self.grid_dim ** 2)
-        self.tile_locations = self.get_tile_locations(tile)
+        self.tiles = image_slicer.slice(image_loc, self.grid_dim ** 2, save=False)
 
     def get_puzzle_pieces(self):
         """
@@ -78,8 +77,9 @@ class ImageNet(object):
         :return: The dictionary of piece_id => piece_image
         """
         result = dict()
-        for piece_id, image_loc in enumerate(self.tile_locations):
-            result[piece_id] = rgb2gray(io.imread(image_loc))
+        for piece_id, piece in enumerate(self.tiles):
+            piece_image = np.array(piece.image)
+            result[piece_id] = rgb2gray(piece_image)
 
         return result
 
@@ -103,13 +103,3 @@ class ImageNet(object):
         :return: self.image
         """
         return self.image
-
-    def get_tile_locations(self, tile):
-        """
-        Returns a list of location of the tiles for the current image in the row major format
-        :param tile: The tile object created for the image with specified grid dimensions
-        :return: tile_loc => The file location of the tiles
-        """
-        tile_str = [str(x)[1:-1].split('-')[1].strip() for x in tile]
-        tile_loc = [self.image_dir + '/' + x for x in tile_str]
-        return tile_loc
