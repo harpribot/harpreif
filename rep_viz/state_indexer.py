@@ -29,6 +29,7 @@ class Image2Feature(object):
         self.state_width = self.state_height
         self.save_transform = True
         self.im2f_loc = None
+        self.feature_size = None
 
     def __load_model(self):
         print 'Initializing Session...'
@@ -41,7 +42,7 @@ class Image2Feature(object):
     def __load_images(self):
         self.imagenet = ImageLoader(self.image_dir)
 
-    def image2feature(self, save_transform=True, im2f_loc= None):
+    def image2feature(self, save_transform=False, im2f_loc= None):
         print 'Loading The images...'
         self.__load_images()
 
@@ -187,10 +188,11 @@ class Image2Feature(object):
                 image_state = self.__get_input_for_model(image)
                 im_feat = self.sess.run(self.h_fc2, feed_dict={self.s: [image_state]})
                 self.feature_dict[image_nm] = im_feat
+                self.feature_size == im_feat.size
             else:
                 break
 
     def __save_and_get_features(self):
         if self.save_transform:
             pickle.dump(self.feature_dict, open(self.im2f_loc + "image2feature.p", "wb"))
-        return self.feature_dict
+        return self.feature_dict, self.feature_size
