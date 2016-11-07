@@ -19,6 +19,7 @@ WINDOW_SIZE = [8, 8]
 SLIDING_STRIDE = WINDOW_SIZE[0]/2
 IMAGE_HEIGHT = IMAGE_WIDTH = 256
 TRIES_PER_IMAGE = 10
+ALPHA = 0.01
 
 
 class Agent(object):
@@ -109,34 +110,33 @@ class Agent(object):
         Forms 3 convolution layers, with a max-pooling layer after first convolution layer.
         :return: None
         """
-        #print self.s.get_shape()
-        self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 2) + self.b_conv1)
-        #print self.h_conv1.get_shape()
+        h_conv1_activation = conv2d(self.s, self.W_conv1, 2) + self.b_conv1
+        # self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 2) + self.b_conv1)
+        self.h_conv1 = tf.maximum(ALPHA * h_conv1_activation, h_conv1_activation)
         self.h_pool1 = max_pool_2x2(self.h_conv1)
-        #print self.h_pool1.get_shape()
 
-        self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
-        #print self.h_conv2.get_shape()
-        # h_pool2 = max_pool_2x2(h_conv2)
+        h_conv2_activation = conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2
+        # self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
+        self.h_conv2 = tf.maximum(ALPHA * h_conv2_activation, h_conv2_activation)
 
-        self.h_conv3 = tf.nn.relu(conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
-        #print self.h_conv3.get_shape()
-        # h_pool3 = max_pool_2x2(h_conv3)
+        h_conv3_activation = conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3
+        # self.h_conv3 = tf.nn.relu(conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
+        self.h_conv3 = tf.maximum(ALPHA * h_conv3_activation, h_conv3_activation)
 
-        # h_pool3_flat = tf.reshape(h_pool3, [-1, 256])
         self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, 2048])
-        #print self.h_conv3_flat.get_shape()
 
     def __form_fully_connected_layers(self):
         """
         Forms 2 fully connected layers
         :return: None
         """
-        self.h_fc1 = tf.nn.relu(tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1)
-        #print self.h_fc1.get_shape()
+        h_fc1_activation = tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1
+        # self.h_fc1 = tf.nn.relu(tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1)
+        self.h_fc1 = tf.maximum(ALPHA * h_fc1_activation, h_fc1_activation)
 
-        self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
-        #print self.h_fc2.get_shape()
+        h_fc2_activation = tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2
+        # self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
+        self.h_fc2 = tf.maximum(ALPHA * h_fc2_activation, h_fc2_activation)
 
     def __form_output_layer(self):
         """
@@ -144,7 +144,6 @@ class Agent(object):
         :return: None
         """
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
-        #print self.readout.get_shape()
 
     def __create_network(self):
         """
