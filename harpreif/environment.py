@@ -135,6 +135,8 @@ class Environment(object):
         reward
         :return:The normalized reward
         """
+        if np.all(self.jigsaw_image == self.original_image):
+            print 'Image and Jigsaw matches'
         difference = self.jigsaw_image - self.original_image
         squared_diff = difference ** 2
         max_squared_diff = np.ones(self.jigsaw_image.shape) ** 2

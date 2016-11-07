@@ -14,7 +14,7 @@ num_gradients = int(args[4])
 
 im2f = Image2Feature(test_dir, checkpoint_dir, num_actions, num_gradients)
 
-image2feature_map, feat_sz = im2f.image2feature()
+image2feature_map, feat_sz = im2f.image2feature(save_transform=True, im2f_loc= './')
 '''
 from rep_viz.representation import NearestNeighbour
 import cPickle as pickle
