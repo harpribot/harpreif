@@ -1,6 +1,7 @@
 from scipy import ndimage
 import glob
 from skimage.color import rgb2gray
+from random import shuffle
 
 
 class ImageLoader(object):
@@ -22,10 +23,11 @@ class ImageLoader(object):
 
     def __index_images(self):
         """
-        Indexes all the images in the train needed for training.
+        Indexes all the images in the train needed for training. Shuffling is done to prevent unlearning
         :return: None
         """
         self.image_list = [x for x in glob.glob(self.image_dir + '/' + '*.jpg')]
+        shuffle(self.image_list)
 
     def load_next_image(self):
         """

@@ -3,6 +3,7 @@ import glob
 import image_slicer
 import numpy as np
 from skimage.color import rgb2gray
+from random import shuffle
 
 
 class ImageNet(object):
@@ -29,6 +30,7 @@ class ImageNet(object):
         :return: None
         """
         self.image_list = [x for x in glob.glob(self.image_dir + '/' + '*.jpg')]
+        shuffle(self.image_list)
 
     def load_next_image(self):
         """
