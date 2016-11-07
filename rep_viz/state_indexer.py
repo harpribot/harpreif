@@ -1,5 +1,5 @@
-import numpy as np
 import tensorflow as tf
+import numpy as np
 from harpreif.network_utils import weight_variable, bias_variable, conv2d, max_pool_2x2
 from image_loader import ImageLoader
 from harpreif.image_utils import sliding_window, gradient_discretizer
@@ -14,6 +14,13 @@ NUM_BINS = 64
 
 class Image2Feature(object):
     def __init__(self, image_dir, checkpoint_dir, num_actions, num_gradients):
+        """
+
+        :param image_dir: The test directory for images
+        :param checkpoint_dir: The checkpoint containing the best learnt model weights and biases
+        :param num_actions: Number of actions that the agent can take
+        :param num_gradients: Number of gradients to be used for each window
+        """
         self.image_dir = image_dir
         self.bins = np.array([x / float(NUM_BINS) for x in range(0, NUM_BINS, 1)])
         self.sess = None
@@ -32,6 +39,10 @@ class Image2Feature(object):
         self.feature_size = None
 
     def __load_model(self):
+        """
+        Loads the model and populates it with checkpoint weights
+        :return: None
+        """
         print 'Initializing Session...'
         self.sess = tf.InteractiveSession()
         print 'Creating Network...'
@@ -40,9 +51,19 @@ class Image2Feature(object):
         self.__populate_network()
 
     def __load_images(self):
+        """
+        Loads the images into imagenet from which it can be queried
+        :return: None
+        """
         self.imagenet = ImageLoader(self.image_dir)
 
     def image2feature(self, save_transform=False, im2f_loc= None):
+        """
+        Transforms image to feature vector obtained from penultimate layer of dqn
+        :param save_transform: True, if we wish to save the image 2 feature transform map
+        :param im2f_loc: If save_transform == True, then this contains the location where to save the map
+        :return: The image 2 feature map
+        """
         print 'Loading The images...'
         self.__load_images()
 
@@ -140,6 +161,10 @@ class Image2Feature(object):
         self.__form_output_layer()
 
     def __populate_network(self):
+        """
+        Popilates the network with checkpoint weights and biases
+        :return: None
+        """
         saver = tf.train.Saver()
         self.sess.run(tf.initialize_all_variables())
         checkpoint = tf.train.get_checkpoint_state(self.checkpoint_dir + "saved_networks")
@@ -180,6 +205,10 @@ class Image2Feature(object):
         return state
 
     def __get_image_features(self):
+        """
+        Get the feature vector for all the images
+        :return: None
+        """
         while True:
             is_present = self.imagenet.load_next_image()
 
@@ -193,6 +222,10 @@ class Image2Feature(object):
                 break
 
     def __save_and_get_features(self):
+        """
+        Saves and returns the feature map and feature size
+        :return: (feature_map, feature_dimension)
+        """
         if self.save_transform:
             pickle.dump(self.feature_dict, open(self.im2f_loc + "image2feature.p", "wb"))
         return self.feature_dict, self.feature_size

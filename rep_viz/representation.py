@@ -4,6 +4,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class NearestNeighbour(object):
     def __init__(self, image2feature_dict, feature_size):
+        """
+        Gets the nearest neighbour using cosine similarity metric
+        :param image2feature_dict: The key, value pair of image and its corresponding feature
+        :param feature_size: The dimension of each feature of each image
+        """
         self.image2feature_dict = image2feature_dict
         self.numimages = len(self.image2feature_dict)
         self.feature_size = feature_size
@@ -13,6 +18,10 @@ class NearestNeighbour(object):
         self.__construct_cs_matrix()
 
     def __vectorify(self):
+        """
+        Converts the map to a vector of dimension (num_images x feature_dim) and saves it as self.X
+        :return: None
+        """
         self.X = np.zeros([self.numimages, self.feature_size])
         counter = 0
         for key, value in self.image2feature_dict.iteritems():
@@ -21,9 +30,19 @@ class NearestNeighbour(object):
             self.X[counter] = value
 
     def __construct_cs_matrix(self):
+        """
+        Creates as cosine similarity matrix between self.X and itself.
+        :return: None
+        """
         self.similarity_mat = cosine_similarity(self.X, self.X, dense_output=True)
 
     def save_nearest_neighbors(self, num_neighbors, out_file):
+        """
+
+        :param num_neighbors: Number of neighbors to be retrieved
+        :param out_file: The output file where the neighbours of each image is to be stored
+        :return: None
+        """
         result_list = []
         for key, value in self.im2index.iteritems():
             neighbor_list = [key]
