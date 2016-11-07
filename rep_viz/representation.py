@@ -28,6 +28,7 @@ class NearestNeighbour(object):
             self.im2index[key] = counter
             self.index2im[counter] = key
             self.X[counter] = value
+            counter += 1
 
     def __construct_cs_matrix(self):
         """
