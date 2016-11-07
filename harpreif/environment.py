@@ -3,7 +3,7 @@ from skimage.feature import hog
 from image_utils import sliding_window, gradient_discretizer
 
 DELAY_REWARD = -0.05
-STEPS_MAX = 20
+STEPS_MAX = 50
 NUM_BINS = 64
 
 

@@ -1,9 +1,8 @@
 import sys
 from harpreif.agent import Agent
 
-# python train.py './train' './val' './' 2 8
-# condorify_gpu_email
-# python train.py '/work/03713/harshal1/maverick/RLProj/train' '/work/03713/harshal1/maverick/RLProj/val' '/work/03713/harshal1/maverick/RLProj/checkpoint/' 2 8
+# python train.py './train' './val' './' 4 8
+# python train.py '/work/03713/harshal1/maverick/RLProj/train' '/work/03713/harshal1/maverick/RLProj/val' '/work/03713/harshal1/maverick/RLProj/checkpoint/' 4 8
 args = sys.argv
 
 train_dir = args[1]
