@@ -96,8 +96,8 @@ class Agent(object):
         :return: None
         """
         self.s = tf.placeholder("float", [None, self.input_height, self.input_width, self.input_channels])
-	self.s = Agent.debug_printer(self.s, "Input: ")
-	
+        self.s = Agent.debug_printer(self.s, "Input: ")
+
     def __form_hidden_layers(self):
         """
         Forms the convolution layers with non-linear recurrent units, followed by fully connected units
@@ -108,68 +108,68 @@ class Agent(object):
     
     @staticmethod	
     def debug_printer(variable, variable_str):
-	return tf.Print(variable, [variable], variable_str)
+        return tf.Print(variable, [variable], variable_str)
 
     def __form_convolution_layers(self):
         """
         Forms 3 convolution layers, with a max-pooling layer after first convolution layer.
         :return: None
         """
-	#self.W_conv1 = Agent.debug_printer(self.W_conv1, "Conv1 weight: ")
-	#self.b_conv1 = Agent.debug_printer(self.b_conv1, "Conv1 bias: ")
+        # self.W_conv1 = Agent.debug_printer(self.W_conv1, "Conv1 weight: ")
+        # self.b_conv1 = Agent.debug_printer(self.b_conv1, "Conv1 bias: ")
         h_conv1_activation = conv2d(self.s, self.W_conv1, 2) + self.b_conv1
-	#h_conv1_activation = Agent.debug_printer(h_conv1_activation, "Conv1 activation: ")
+        # h_conv1_activation = Agent.debug_printer(h_conv1_activation, "Conv1 activation: ")
         # self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 2) + self.b_conv1)
         self.h_conv1 = tf.maximum(ALPHA * h_conv1_activation, h_conv1_activation)
         self.h_pool1 = max_pool_2x2(self.h_conv1)
-	#self.h_conv1 = Agent.debug_printer(self.h_conv1, "Conv1 output: ")
-	#self.h_pool1 = Agent.debug_printer(self.h_pool1, "Pool1 output: ")
+        # self.h_conv1 = Agent.debug_printer(self.h_conv1, "Conv1 output: ")
+        # self.h_pool1 = Agent.debug_printer(self.h_pool1, "Pool1 output: ")
 
         h_conv2_activation = conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2
-        #h_conv2_activation = Agent.debug_printer(h_conv2_activation, "Conv2 activation: ")
-	# self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
+        # h_conv2_activation = Agent.debug_printer(h_conv2_activation, "Conv2 activation: ")
+        # self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
         self.h_conv2 = tf.maximum(ALPHA * h_conv2_activation, h_conv2_activation)
-	#self.h_conv2 = Agent.debug_printer(self.h_conv2, "Conv2 output: ")
+        # self.h_conv2 = Agent.debug_printer(self.h_conv2, "Conv2 output: ")
 
         h_conv3_activation = conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3
-	#h_conv3_activation = Agent.debug_printer(h_conv3_activation, "Conv3 activation: ")
+        # h_conv3_activation = Agent.debug_printer(h_conv3_activation, "Conv3 activation: ")
         # self.h_conv3 = tf.nn.relu(conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
         self.h_conv3 = tf.maximum(ALPHA * h_conv3_activation, h_conv3_activation)
-	#self.h_conv3 = Agent.debug_printer(self.h_conv3, "Conv3 output: ")
+        # self.h_conv3 = Agent.debug_printer(self.h_conv3, "Conv3 output: ")
 
         self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, 2048])
-	#self.h_conv3_flat = Agent.debug_printer(self.h_conv3_flat, "Conv3 flattened output: ")
+        # self.h_conv3_flat = Agent.debug_printer(self.h_conv3_flat, "Conv3 flattened output: ")
 
     def __form_fully_connected_layers(self):
         """
         Forms 2 fully connected layers
         :return: None
         """
-	#self.W_fc1 = Agent.debug_printer(self.W_fc1, "FC1 weight: ")
-        #self.b_fc1 = Agent.debug_printer(self.b_fc1, "FC1 bias: ")
+        # self.W_fc1 = Agent.debug_printer(self.W_fc1, "FC1 weight: ")
+        # self.b_fc1 = Agent.debug_printer(self.b_fc1, "FC1 bias: ")
         h_fc1_activation = tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1
-	#h_fc1_activation = Agent.debug_printer(h_fc1_activation, "Fully 1 activation: ")
+        # h_fc1_activation = Agent.debug_printer(h_fc1_activation, "Fully 1 activation: ")
         # self.h_fc1 = tf.nn.relu(tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1)
         self.h_fc1 = tf.maximum(ALPHA * h_fc1_activation, h_fc1_activation)
-	#self.h_fc1 = Agent.debug_printer(self.h_fc1, "Fully 1 output: ")
+        # self.h_fc1 = Agent.debug_printer(self.h_fc1, "Fully 1 output: ")
         
-	#self.W_fc2 = Agent.debug_printer(self.W_fc2, "FC2 weight: ")
-        #self.b_fc2 = Agent.debug_printer(self.b_fc2, "FC2 bias: ")
-	h_fc2_activation = tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2
-        #h_fc2_activation = Agent.debug_printer(h_fc2_activation, "Fully 2 activation: ")
-	# self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
+        # self.W_fc2 = Agent.debug_printer(self.W_fc2, "FC2 weight: ")
+        # self.b_fc2 = Agent.debug_printer(self.b_fc2, "FC2 bias: ")
+        h_fc2_activation = tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2
+        # h_fc2_activation = Agent.debug_printer(h_fc2_activation, "Fully 2 activation: ")
+        # self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
         self.h_fc2 = tf.maximum(ALPHA * h_fc2_activation, h_fc2_activation)
-	#self.h_fc2 = Agent.debug_printer(self.h_fc2, "Fully 2 output: ")	
+        # self.h_fc2 = Agent.debug_printer(self.h_fc2, "Fully 2 output: ")
 
     def __form_output_layer(self):
         """
         Forms The output layer (linear in this case) - The value represents the value function for the action
         :return: None
         """
-	self.W_fc3 = Agent.debug_printer(self.W_fc3, "FC3 weight: ")
+        self.W_fc3 = Agent.debug_printer(self.W_fc3, "FC3 weight: ")
         self.b_fc3 = Agent.debug_printer(self.b_fc3, "FC3 bias: ")
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
-	self.readout = Agent.debug_printer(self.readout, "Output Layer output: ")
+        self.readout = Agent.debug_printer(self.readout, "Output Layer output: ")
 
     def __create_network(self):
         """
@@ -191,8 +191,8 @@ class Agent(object):
         self.label = tf.placeholder("float", [None])
 
         self.readout_action = tf.reduce_sum(tf.mul(self.readout, self.action))
-	self.cost = tf.reduce_mean(tf.square(self.label - self.readout_action))
-	self.cost = Agent.debug_printer(self.cost, "Cost(MINIMIZE): ")
+        self.cost = tf.reduce_mean(tf.square(self.label - self.readout_action))
+        self.cost = Agent.debug_printer(self.cost, "Cost(MINIMIZE): ")
         train_step = tf.train.AdadeltaOptimizer(LEARNING_RATE).minimize(self.cost)
 
         # train
@@ -230,7 +230,7 @@ class Agent(object):
         while True:
             # choose an action epsilon greedily
             readout_t = self.readout.eval(feed_dict={self.s: [state]})
-	    #print readout_t
+            # print readout_t
             a_t, action_index = self.__greedy_action(readout_t, epsilon)
 
             # update the environment with new action
@@ -257,7 +257,7 @@ class Agent(object):
                 y_batch = []
                 readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
                 for i in range(0, len(minibatch)):
-		    print i, len(minibatch)
+                    print i, len(minibatch)
                     terminal = minibatch[i][4]
                     # if terminal, only equals reward
                     if terminal:
