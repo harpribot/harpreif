@@ -264,7 +264,6 @@ class Agent(object):
                 readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
 
                 for i in range(0, len(minibatch)):
-                    print i, len(minibatch)
                     terminal = minibatch[i][4]
                     # if terminal, only equals reward
                     if terminal:

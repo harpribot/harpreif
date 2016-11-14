@@ -4,9 +4,7 @@
     <list default="true" id="ad9df43a-faef-487f-b4d1-e2c1bc3abc0e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/harpreif/agent.py" afterPath="$PROJECT_DIR$/harpreif/agent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/harpreif/environment.py" afterPath="$PROJECT_DIR$/harpreif/environment.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test.py" afterPath="$PROJECT_DIR$/test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train.py" afterPath="$PROJECT_DIR$/train.py" />
     </list>
     <ignored path="RLproject.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -30,11 +28,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="agent.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="agent.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/harpreif/agent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3870">
-              <caret line="11" column="52" selection-start-line="11" selection-start-column="52" selection-end-line="11" selection-end-column="52" />
+            <state relative-caret-position="196">
+              <caret line="135" column="57" selection-start-line="135" selection-start-column="57" selection-end-line="135" selection-end-column="57" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -42,11 +40,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="train.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="train.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="18" column="38" selection-start-line="18" selection-start-column="38" selection-end-line="18" selection-end-column="38" />
+            <state relative-caret-position="240">
+              <caret line="17" column="51" selection-start-line="17" selection-start-column="51" selection-end-line="17" selection-end-column="51" />
               <folding />
             </state>
           </provider>
@@ -93,8 +91,8 @@
         <option value="$PROJECT_DIR$/rep_viz/state_indexer.py" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/train.py" />
-        <option value="$PROJECT_DIR$/harpreif/agent.py" />
         <option value="$PROJECT_DIR$/harpreif/environment.py" />
+        <option value="$PROJECT_DIR$/harpreif/agent.py" />
       </list>
     </option>
   </component>
@@ -632,7 +630,14 @@
       <option name="project" value="LOCAL" />
       <updated>1479110952831</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="updates the parameters of the model and training statistics">
+      <created>1479166587455</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1479166587455</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TodoView">
@@ -718,7 +723,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Corrects the puzzle piece placing bug, and document the environment class" />
     <MESSAGE value="A working implementation. Not done convergence test." />
     <MESSAGE value="Added a graded intensity difference based reward" />
     <MESSAGE value="Added greedyness reduction" />
@@ -743,7 +747,8 @@
     <MESSAGE value="adds leaky relu to prevent dying neurons" />
     <MESSAGE value="adds correct completion checker to environment" />
     <MESSAGE value="adds fix to the indentation" />
-    <option name="LAST_COMMIT_MESSAGE" value="adds fix to the indentation" />
+    <MESSAGE value="updates the parameters of the model and training statistics" />
+    <option name="LAST_COMMIT_MESSAGE" value="updates the parameters of the model and training statistics" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1025,21 +1030,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/harpreif/agent.py">
+    <entry file="file://$PROJECT_DIR$/train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3870">
-          <caret line="11" column="52" selection-start-line="11" selection-start-column="52" selection-end-line="11" selection-end-column="52" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="240">
+          <caret line="17" column="51" selection-start-line="17" selection-start-column="51" selection-end-line="17" selection-end-column="51" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train.py">
+    <entry file="file://$PROJECT_DIR$/harpreif/agent.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="18" column="38" selection-start-line="18" selection-start-column="38" selection-end-line="18" selection-end-column="38" />
-          <folding />
+        <state relative-caret-position="196">
+          <caret line="135" column="57" selection-start-line="135" selection-start-column="57" selection-end-line="135" selection-end-column="57" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
