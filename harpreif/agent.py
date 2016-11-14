@@ -291,6 +291,7 @@ class Agent(object):
                         learning_rate /= LEARNING_DECAY
                     image_present = imagenet.load_next_image()
                     if image_present:
+                        print 'Image Number: %d' % self.image_handled
                         puzzle_pieces = imagenet.get_puzzle_pieces()
                         original_image = imagenet.get_image()
                         env.update_puzzle_pieces(puzzle_pieces)
