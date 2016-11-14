@@ -8,18 +8,21 @@ import random
 import numpy as np
 
 GAME = 'jigsaw'
-LEARNING_RATE = 1e-5
-INITIAL_EPSILON = 0.3
-FINAL_EPSILON = 0.05
-OBSERVE = 1000
-REPLAY_MEMORY = 500
-BATCH_SIZE = 32
-GAMMA = 0.99
-WINDOW_SIZE = [8, 8]
-SLIDING_STRIDE = WINDOW_SIZE[0]/2
+LEARNING_RATE = 1e-3  # learning rate initial
+LEARNING_DECAY = 2  # learning is halved every 100 images.
+NUMBER_OF_IMAGES_FOR_DECAY = 500  # number of images before halving the learning rate
+INITIAL_EPSILON = 0.3  # the starting epsilon of the learning phase in training
+FINAL_EPSILON = 0.05  # the final epsilon of the learning phase in training
+OBSERVE_EPSILON = 0.9  # the random action selection during observe phase. kept high to get good dataset
+OBSERVE = 10000  # the number of iterations we use to observe
+REPLAY_MEMORY = 5000  # the number of elements to keep in the replay memory
+BATCH_SIZE = 128  # the batch size for training
+GAMMA = 0.99  # discount factor for reinforcement learning
+WINDOW_SIZE = [8, 8]  # window dimension over which hog is computed
+SLIDING_STRIDE = WINDOW_SIZE[0]/2  # sliding stride for the window used for HOG
 IMAGE_HEIGHT = IMAGE_WIDTH = 256
-TRIES_PER_IMAGE = 10
-ALPHA = 0.01
+TRIES_PER_IMAGE = 2  # Number of tries to do per image
+ALPHA = 0.01  # Leaky RELU parameter - prevents dyeing neurons
 
 
 class Agent(object):
@@ -44,6 +47,7 @@ class Agent(object):
         self.val_dir = None
         self.test_dir = None
         self.checkpoint_dir = None
+        self.image_handled = 0
 
     def play_game(self, train_dir, val_dir, checkpoint_dir):
         """
@@ -166,8 +170,8 @@ class Agent(object):
         Forms The output layer (linear in this case) - The value represents the value function for the action
         :return: None
         """
-        self.W_fc3 = Agent.debug_printer(self.W_fc3, "FC3 weight: ")
-        self.b_fc3 = Agent.debug_printer(self.b_fc3, "FC3 bias: ")
+        #self.W_fc3 = Agent.debug_printer(self.W_fc3, "FC3 weight: ")
+        #self.b_fc3 = Agent.debug_printer(self.b_fc3, "FC3 bias: ")
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
         self.readout = Agent.debug_printer(self.readout, "Output Layer output: ")
 
@@ -193,7 +197,8 @@ class Agent(object):
         self.readout_action = tf.reduce_sum(tf.mul(self.readout, self.action))
         self.cost = tf.reduce_mean(tf.square(self.label - self.readout_action))
         self.cost = Agent.debug_printer(self.cost, "Cost(MINIMIZE): ")
-        train_step = tf.train.AdadeltaOptimizer(LEARNING_RATE).minimize(self.cost)
+        learning_rate_tf = tf.placeholder(tf.float32, shape=[])
+        train_step = tf.train.AdadeltaOptimizer(learning_rate_tf).minimize(self.cost)
 
         # train
         # get the start state of the network
@@ -223,6 +228,7 @@ class Agent(object):
         # start training
         epsilon = INITIAL_EPSILON
         t = 0
+        learning_rate = LEARNING_RATE
 
         # Initialize the replay memory
         replay_memory = deque()
@@ -231,7 +237,7 @@ class Agent(object):
             # choose an action epsilon greedily
             readout_t = self.readout.eval(feed_dict={self.s: [state]})
             # print readout_t
-            a_t, action_index = self.__greedy_action(readout_t, epsilon)
+            a_t, action_index = self.__greedy_action(readout_t, epsilon, t)
 
             # update the environment with new action
             env.set_action(action_index)
@@ -256,6 +262,7 @@ class Agent(object):
 
                 y_batch = []
                 readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
+
                 for i in range(0, len(minibatch)):
                     print i, len(minibatch)
                     terminal = minibatch[i][4]
@@ -265,7 +272,11 @@ class Agent(object):
                     else:
                         y_batch.append(r_batch[i] + GAMMA * np.max(readout_new_batch[i]))
 
-                self.sess.run(train_step, feed_dict={self.label: y_batch, self.action: a_batch, self.s: s_batch})
+                self.sess.run(train_step, feed_dict={self.label: y_batch,
+                                                     self.action: a_batch,
+                                                     self.s: s_batch,
+                                                     learning_rate_tf: learning_rate
+                                                    })
 
             '''
             print y_batch, self.sess.run([self.readout_action],
@@ -276,6 +287,9 @@ class Agent(object):
             # then move to the new image
             if terminal:
                 if imagenet.get_tries_per_image() == TRIES_PER_IMAGE:
+                    self.image_handled += 1
+                    if self.image_handled % NUMBER_OF_IMAGES_FOR_DECAY == 0:
+                        learning_rate /= LEARNING_DECAY
                     image_present = imagenet.load_next_image()
                     if image_present:
                         puzzle_pieces = imagenet.get_puzzle_pieces()
@@ -356,8 +370,11 @@ class Agent(object):
         # display the reward and image matching performance statistics
         performance_statistics(image_diff_list, reward_list)
 
-    def __greedy_action(self, value_function, epsilon):
+    def __greedy_action(self, value_function, epsilon, t=None):
         a_t = np.zeros([self.num_actions])
+
+        if t is not None:
+            epsilon = OBSERVE_EPSILON if t < OBSERVE else epsilon
 
         if random.random() < epsilon:
             action_index = random.randrange(self.num_actions)

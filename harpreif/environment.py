@@ -3,8 +3,9 @@ from skimage.feature import hog
 from image_utils import sliding_window, gradient_discretizer
 
 DELAY_REWARD = -0.05
-STEPS_MAX = 50
-NUM_BINS = 64
+TERMINAL_REWARD_INTENSITY = 4
+STEPS_MAX = 70
+NUM_BINS = 16
 
 
 class Environment(object):
@@ -79,11 +80,11 @@ class Environment(object):
         for slide in slides:
             window_image = slide[2]
 
-            gradient = np.array(hog(window_image,
+            gradient = np.array(hog(image=window_image,
                                     orientations=self.num_gradients,
                                     pixels_per_cell=self.window,
                                     cells_per_block=(1, 1), visualise=False))
-
+            assert np.max(gradient) <= 1 and np.min(gradient) >=0, "Gradients are not normalized"
             assert gradient.size == self.num_gradients, "Gradient size not equal to desired size"
             gradient = gradient_discretizer(gradient, self.bins)
             hog_gradients.extend(gradient)
@@ -139,7 +140,7 @@ class Environment(object):
             print 'Image and Jigsaw matches'
         difference = self.jigsaw_image - self.original_image
         squared_diff = difference ** 2
-        max_squared_diff = np.ones(self.jigsaw_image.shape) ** 2
+        max_squared_diff = np.ones(self.jigsaw_image.shape)  # as image is between 0 and 1
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
         return -normalized_sum
 
@@ -157,7 +158,7 @@ class Environment(object):
                 return NEGATIVE_REWARD
         '''
         if self.terminal:
-            return self.get_normalized_image_diff()
+            return TERMINAL_REWARD_INTENSITY * self.get_normalized_image_diff()
         else:
             return DELAY_REWARD
 
