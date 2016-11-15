@@ -22,7 +22,7 @@ class ImageNet(object):
         self.index2piece = dict()
         self.index2histogram = dict()
         self.tile_locations = None
-        self.tries = 0
+        self.tries = 1
 
     def __index_images(self):
         """

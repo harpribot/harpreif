@@ -1,7 +1,7 @@
 import sys
-from rep_viz.state_indexer import  Image2Feature
-
-#python test.py '/work/03713/harshal1/maverick/RLProj/test' '/work/03713/harshal1/maverick/RLProj/checkpoint/' 2 8
+from rep_viz.state_indexer import Image2Feature
+'''
+#python test.py '/work/03713/harshal1/maverick/RLProj/test' '/work/03713/harshal1/maverick/RLProj/checkpoint/' 4 8
 args = sys.argv
 
 test_dir = args[1]
@@ -30,7 +30,7 @@ num_neighbors = 5
 out_file = './neighbors.txt'
 nb_obj = NearestNeighbour(image2feature_map, feat_sz)
 nb_obj.save_nearest_neighbors(num_neighbors, out_file)
-'''
+
 
 
 
