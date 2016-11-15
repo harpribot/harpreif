@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import matplotlib.pyplot as plt
 
 
 class NearestNeighbour(object):
@@ -42,7 +43,7 @@ class NearestNeighbour(object):
 
         :param num_neighbors: Number of neighbors to be retrieved
         :param out_file: The output file where the neighbours of each image is to be stored
-        :return: None
+        :return: result_list
         """
         result_list = []
         for key, value in self.im2index.iteritems():
@@ -55,9 +56,35 @@ class NearestNeighbour(object):
 
             result_list.append(neighbor_list)
 
-        with open(out_file, 'wb') as out:
-            for item in result_list:
-                print>>out, item
+        #with open(out_file, 'wb') as out:
+        #    for item in result_list:
+        #        print>>out, item
+
+        # compute neighbor statistics
+        NearestNeighbour.compute_neighbor_stats(result_list, num_neighbors)
+        return result_list
+
+    @staticmethod
+    def compute_neighbor_stats(result_list, num_neighbors):
+        object_list = [[int(x.split('/')[-1].split('_')[0]) for x in row] for row in result_list]
+        object_list = [x[:-1] for x in object_list]
+        image_object = [x[0] for x in object_list]
+        neighbors_object = [x[1:] for x in object_list]
+        nb_bool = [[x == y for x in row] for row, y in zip(neighbors_object, image_object)]
+        total_true_nb = [sum(x) for x in nb_bool]
+
+        total_matches = sum(total_true_nb)
+        average_match_per_obj = total_matches/float(len(total_true_nb))
+
+        print 'Average Neighbor found per object: %f' % average_match_per_obj
+
+        # plot the histogram plot for number of images with more than x matches
+        x = range(num_neighbors)
+        hist_y = [sum([val > match_count for val in total_true_nb]) for match_count in x]
+        plt.bar(x, hist_y, align='center', alpha=0.5)
+        plt.show()
+
+
 
 
 
