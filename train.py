@@ -1,19 +1,22 @@
-import sys
+import argparse
 from harpreif.agent import Agent
 
-# python train.py './train' './val' './' 8 8
-# python train.py '/work/03713/harshal1/maverick/RLProj/train' '/work/03713/harshal1/maverick/RLProj/val' '/work/03713/harshal1/maverick/RLProj/checkpoint/' 8 8
-args = sys.argv
+'''
+Local Machine
+python train.py --train_images './train' --val_images './val' --checkpoint_dir './' --grid_dim 8 --num_gradients 8
+Maverick --> python train.py --train_images /work/03713/harshal1/maverick/RLProj/train --val_images '/work/03713/harshal1/maverick/RLProj/val' --checkpoint_dir '/work/03713/harshal1/maverick/RLProj/checkpoint/' --grid_dim 8 --num_gradients 8
+'''
 
-train_dir = args[1]
-val_dir = args[2]
+# define the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--train_images', type=str)
+parser.add_argument('--val_images', type=str)
+parser.add_argument('--checkpoint_dir', type=str)
+parser.add_argument('--grid_dim', type=int, default=8)
+parser.add_argument('--num_gradients', type=int, default=8)
+opt = parser.parse_args()
+num_actions = opt.grid_dim ** 4
 
-checkpoint_dir = args[3]
-
-grid_dim = int(args[4])
-
-num_actions = grid_dim ** 4
-num_gradients = int(args[5])
-
-agent = Agent(num_actions, grid_dim, num_gradients)
-agent.play_game(train_dir, val_dir, checkpoint_dir)
+# create and train the agent
+agent = Agent(num_actions, opt.grid_dim, opt.num_gradients)
+agent.play_game(opt.train_images, opt.val_images, opt.checkpoint_dir)
