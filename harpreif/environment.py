@@ -34,9 +34,9 @@ class Environment(object):
         self.action = None
         self.jigsaw_id_to_placed_location = dict()
         self.placed_location_to_jigsaw_id = dict()
-        self.terminal = False
         self.jigsaw_split = np.split(np.array(range(self.image_dim)), self.grid_dim)
         self.steps = 0
+        self.terminal = False
 
     def __update_placed_pieces(self, jigsaw_id, place_id):
         """
@@ -167,7 +167,8 @@ class Environment(object):
         if all(jigsaw_id == place_id for jigsaw_id, place_id in self.jigsaw_id_to_placed_location.iteritems()) \
                 or self.steps >= STEPS_MAX:
             self.terminal = True
-            self.reset()  # reset environment when terminal state is reached
+
+        return self.terminal
 
     def get_state_reward_pair(self):
         """
@@ -176,10 +177,13 @@ class Environment(object):
         :return: (state, reward, terminal) triple
         """
         self.steps += 1
-        self.__is_terminal()
+        terminal = self.__is_terminal()
         reward = self.__get_reward()
         next_state = self.__get_next_state()
-        return reward, next_state, self.terminal
+        if terminal:
+            self.reset()
+
+        return reward, next_state, terminal
 
     def decode_action(self):
         """
