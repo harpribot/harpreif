@@ -220,7 +220,6 @@ class Agent(object):
         :param learning_rate:
         :return: None
         """
-        self.__train_minibatch()
         minibatch = random.sample(replay_memory, BATCH_SIZE)
 
         # get the batch variables
