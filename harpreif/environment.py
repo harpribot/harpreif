@@ -164,8 +164,8 @@ class Environment(object):
         :return: None
         """
         # check if self.game-state is terminal
-        if all(jigsaw_id == place_id for jigsaw_id, place_id
-               in self.jigsaw_id_to_placed_location) or self.steps >= STEPS_MAX:
+        if all(jigsaw_id == place_id for jigsaw_id, place_id in self.jigsaw_id_to_placed_location.iteritems()) \
+                or self.steps >= STEPS_MAX:
             self.terminal = True
             self.reset()  # reset environment when terminal state is reached
 
