@@ -336,6 +336,8 @@ class Agent(object):
         reward_list = []
         image_diff_list = []
         episode_reward = 0.0
+        testing = 0
+        total_testing = 40
 
         while True:
             # choose an action epsilon greedily
@@ -355,6 +357,9 @@ class Agent(object):
                 image_present = imagenet.load_next_image()
 
                 if image_present:
+                    testing += 1
+                    if testing == total_testing:
+                        break
                     puzzle_pieces = imagenet.get_puzzle_pieces()
                     original_image = imagenet.get_image()
                     env.update_puzzle_pieces(puzzle_pieces)
