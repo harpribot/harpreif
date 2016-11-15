@@ -94,13 +94,3 @@ class NearestNeighbour(object):
         hist_y = [sum([val > match_count for val in total_true_nb]) for match_count in x]
         plt.bar(x, hist_y, align='center', alpha=0.5)
         plt.show()
-
-
-
-
-
-
-
-
-
-

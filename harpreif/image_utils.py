@@ -32,4 +32,3 @@ def performance_statistics(image_diff_list, reward_list):
 
     print 'The image matching performance - %f' % np.average(image_diff_list)
     print 'The average accumulated reward - %f' % np.average(reward_list)
-

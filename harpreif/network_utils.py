@@ -39,3 +39,7 @@ def max_pool_2x2(x):
     :return: The maxpooling layer Tensorflow placeholder
     """
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
+
+
+def debug_printer(variable, variable_str):
+    return tf.Print(variable, [variable], variable_str)
