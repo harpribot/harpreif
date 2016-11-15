@@ -40,11 +40,18 @@ class NearestNeighbour(object):
 
     def save_nearest_neighbors(self, num_neighbors, out_file):
         """
-
+        Saves the nearest neighbors of the key images in the test file
         :param num_neighbors: Number of neighbors to be retrieved
         :param out_file: The output file where the neighbours of each image is to be stored
-        :return: result_list
+        :return: None
         """
+        neighbor_list = self.compute_nearest_neighbors(num_neighbors)
+        # save it
+        with open(out_file, 'wb') as out:
+            for item in neighbor_list:
+                print>>out, item
+
+    def compute_nearest_neighbors(self, num_neighbors):
         result_list = []
         for key, value in self.im2index.iteritems():
             neighbor_list = [key]
@@ -56,16 +63,20 @@ class NearestNeighbour(object):
 
             result_list.append(neighbor_list)
 
-        #with open(out_file, 'wb') as out:
-        #    for item in result_list:
-        #        print>>out, item
-
         # compute neighbor statistics
         NearestNeighbour.compute_neighbor_stats(result_list, num_neighbors)
+
         return result_list
 
     @staticmethod
     def compute_neighbor_stats(result_list, num_neighbors):
+        """
+        Compute the statistics of found neighbors and displays the histogram statistics of the frequency of images
+        with a given number of neighbors of same object class as the key.
+        :param result_list: The neighbor list obtained for each key, with key being the first element of the list
+        :param num_neighbors: Number of neighbors used
+        :return: None
+        """
         object_list = [[int(x.split('/')[-1].split('_')[0]) for x in row] for row in result_list]
         object_list = [x[:-1] for x in object_list]
         image_object = [x[0] for x in object_list]

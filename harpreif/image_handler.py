@@ -7,14 +7,16 @@ from random import shuffle
 
 
 class ImageNet(object):
-    def __init__(self, image_dir, grid_dim):
+    def __init__(self, image_dir, grid_dim, num_images=None):
         """
 
         :param image_dir: The directory containing all the resized 256 x 256 images of train.
         :param grid_dim: The number of horizontal and vertical cuts required to form the jigsaw piece
+        :param num_images: Total number of images to be used for training/ validation / testing. If None, use all.
         """
         self.image_dir = image_dir
         self.grid_dim = grid_dim
+        self.num_images = num_images
         self.image_list = None
         self.image_ptr = 0
         self.__index_images()
@@ -26,11 +28,14 @@ class ImageNet(object):
 
     def __index_images(self):
         """
-        Indexes all the images in the train needed for training.
+        Indexes all the images in the train needed for training. Keeps only the number of images specified by user
+        via self.num_images. Discards rest.
         :return: None
         """
         self.image_list = [x for x in glob.glob(self.image_dir + '/' + '*.jpg')]
         shuffle(self.image_list)
+        if self.num_images is not None:
+            self.image_list = self.image_list[:self.num_images]
 
     def load_next_image(self):
         """
@@ -39,7 +44,7 @@ class ImageNet(object):
         """
         if len(self.image_list) == self.image_ptr:
             return False
-        print 'Loaded New Image'
+        print 'Loaded Image #%d ...' % self.image_ptr
         self.image = ndimage.imread(self.image_list[self.image_ptr])
         is_color = self.__check_color()
         if is_color:

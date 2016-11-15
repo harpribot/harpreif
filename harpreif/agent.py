@@ -6,23 +6,7 @@ from environment import Environment
 from image_utils import performance_statistics
 import random
 import numpy as np
-
-GAME = 'jigsaw'
-LEARNING_RATE = 1e-3  # learning rate initial
-LEARNING_DECAY = 2  # learning is halved every 100 images.
-NUMBER_OF_IMAGES_FOR_DECAY = 500  # number of images before halving the learning rate
-INITIAL_EPSILON = 0.3  # the starting epsilon of the learning phase in training
-FINAL_EPSILON = 0.05  # the final epsilon of the learning phase in training
-OBSERVE_EPSILON = 0.9  # the random action selection during observe phase. kept high to get good dataset
-OBSERVE = 10000  # the number of iterations we use to observe
-REPLAY_MEMORY = 5000  # the number of elements to keep in the replay memory
-BATCH_SIZE = 128  # the batch size for training
-GAMMA = 0.99  # discount factor for reinforcement learning
-WINDOW_SIZE = [8, 8]  # window dimension over which hog is computed
-SLIDING_STRIDE = WINDOW_SIZE[0]/2  # sliding stride for the window used for HOG
-IMAGE_HEIGHT = IMAGE_WIDTH = 256
-TRIES_PER_IMAGE = 2  # Number of tries to do per image
-ALPHA = 0.01  # Leaky RELU parameter - prevents dyeing neurons
+from myconstants import *
 
 
 class Agent(object):
@@ -116,62 +100,37 @@ class Agent(object):
 
     def __form_convolution_layers(self):
         """
-        Forms 3 convolution layers, with a max-pooling layer after first convolution layer.
+        Forms 3 convolution layers, with a max-pooling layer after first convolution layer and Leaky RELU for
+        each convolution layer
         :return: None
         """
-        # self.W_conv1 = Agent.debug_printer(self.W_conv1, "Conv1 weight: ")
-        # self.b_conv1 = Agent.debug_printer(self.b_conv1, "Conv1 bias: ")
         h_conv1_activation = conv2d(self.s, self.W_conv1, 2) + self.b_conv1
-        # h_conv1_activation = Agent.debug_printer(h_conv1_activation, "Conv1 activation: ")
-        # self.h_conv1 = tf.nn.relu(conv2d(self.s, self.W_conv1, 2) + self.b_conv1)
         self.h_conv1 = tf.maximum(ALPHA * h_conv1_activation, h_conv1_activation)
         self.h_pool1 = max_pool_2x2(self.h_conv1)
-        # self.h_conv1 = Agent.debug_printer(self.h_conv1, "Conv1 output: ")
-        # self.h_pool1 = Agent.debug_printer(self.h_pool1, "Pool1 output: ")
 
         h_conv2_activation = conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2
-        # h_conv2_activation = Agent.debug_printer(h_conv2_activation, "Conv2 activation: ")
-        # self.h_conv2 = tf.nn.relu(conv2d(self.h_pool1, self.W_conv2, 2) + self.b_conv2)
         self.h_conv2 = tf.maximum(ALPHA * h_conv2_activation, h_conv2_activation)
-        # self.h_conv2 = Agent.debug_printer(self.h_conv2, "Conv2 output: ")
 
         h_conv3_activation = conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3
-        # h_conv3_activation = Agent.debug_printer(h_conv3_activation, "Conv3 activation: ")
-        # self.h_conv3 = tf.nn.relu(conv2d(self.h_conv2, self.W_conv3, 1) + self.b_conv3)
         self.h_conv3 = tf.maximum(ALPHA * h_conv3_activation, h_conv3_activation)
-        # self.h_conv3 = Agent.debug_printer(self.h_conv3, "Conv3 output: ")
-
         self.h_conv3_flat = tf.reshape(self.h_conv3, [-1, 2048])
-        # self.h_conv3_flat = Agent.debug_printer(self.h_conv3_flat, "Conv3 flattened output: ")
 
     def __form_fully_connected_layers(self):
         """
         Forms 2 fully connected layers
         :return: None
         """
-        # self.W_fc1 = Agent.debug_printer(self.W_fc1, "FC1 weight: ")
-        # self.b_fc1 = Agent.debug_printer(self.b_fc1, "FC1 bias: ")
         h_fc1_activation = tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1
-        # h_fc1_activation = Agent.debug_printer(h_fc1_activation, "Fully 1 activation: ")
-        # self.h_fc1 = tf.nn.relu(tf.matmul(self.h_conv3_flat, self.W_fc1) + self.b_fc1)
         self.h_fc1 = tf.maximum(ALPHA * h_fc1_activation, h_fc1_activation)
-        # self.h_fc1 = Agent.debug_printer(self.h_fc1, "Fully 1 output: ")
-        
-        # self.W_fc2 = Agent.debug_printer(self.W_fc2, "FC2 weight: ")
-        # self.b_fc2 = Agent.debug_printer(self.b_fc2, "FC2 bias: ")
+
         h_fc2_activation = tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2
-        # h_fc2_activation = Agent.debug_printer(h_fc2_activation, "Fully 2 activation: ")
-        # self.h_fc2 = tf.nn.relu(tf.matmul(self.h_fc1, self.W_fc2) + self.b_fc2)
         self.h_fc2 = tf.maximum(ALPHA * h_fc2_activation, h_fc2_activation)
-        # self.h_fc2 = Agent.debug_printer(self.h_fc2, "Fully 2 output: ")
 
     def __form_output_layer(self):
         """
         Forms The output layer (linear in this case) - The value represents the value function for the action
         :return: None
         """
-        #self.W_fc3 = Agent.debug_printer(self.W_fc3, "FC3 weight: ")
-        #self.b_fc3 = Agent.debug_printer(self.b_fc3, "FC3 bias: ")
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
         self.readout = Agent.debug_printer(self.readout, "Output Layer output: ")
 
@@ -184,137 +143,168 @@ class Agent(object):
         self.__form_input_layer()
         self.__form_hidden_layers()
         self.__form_output_layer()
+        self.__define_loss()
+        self.__form_trainer()
 
-    def __train_network(self):
+    def __define_loss(self):
         """
-        Trains the DQN network
+        Defines the loss function for the model
         :return: None
         """
-        # define the cost function
         self.action = tf.placeholder("float", [None, self.num_actions])
         self.label = tf.placeholder("float", [None])
 
         self.readout_action = tf.reduce_sum(tf.mul(self.readout, self.action))
         self.cost = tf.reduce_mean(tf.square(self.label - self.readout_action))
         self.cost = Agent.debug_printer(self.cost, "Cost(MINIMIZE): ")
-        learning_rate_tf = tf.placeholder(tf.float32, shape=[])
-        train_step = tf.train.AdadeltaOptimizer(learning_rate_tf).minimize(self.cost)
 
-        # train
-        # get the start state of the network
-        imagenet = ImageNet(self.train_dir, self.grid_dim)
-        imagenet.load_next_image()
-        puzzle_pieces = imagenet.get_puzzle_pieces()
-        original_image = imagenet.get_image()
+    def __form_trainer(self):
+        """
+        Defines the trainer for the model. It is a Stochastic Gradient Descent using Adadelta optimizer
+        :return: None
+        """
+        self.learning_rate_tf = tf.placeholder(tf.float32, shape=[])
+        self.train_step = tf.train.AdadeltaOptimizer(self.learning_rate_tf).minimize(self.cost)
 
-        state = np.zeros([self.input_height, self.input_width, self.input_channels])
+    def __get_image_loader(self, num_images=None):
+        """
+        Loads the image iterator
+        :return: image iterator
+        """
+        return ImageNet(self.train_dir, self.grid_dim, num_images)
 
-        # initialize the environment
-        env = Environment(original_image, state, self.grid_dim, puzzle_pieces,
-                          IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
-                          self.input_channels)
+    def __get_initial_state(self):
+        """
+        Returns the starting state for the RL agent
+        :return: starting state
+        """
+        return np.zeros([self.input_height, self.input_width, self.input_channels])
 
-        # saving and loading networks
-        saver = tf.train.Saver()
+    def __model_loader(self):
+        """
+        Loads the model from the checkpoint
+        :return: None
+        """
+        self.saver = tf.train.Saver()
         self.sess.run(tf.initialize_all_variables())
         checkpoint = tf.train.get_checkpoint_state(self.checkpoint_dir + "saved_networks")
 
         if checkpoint and checkpoint.model_checkpoint_path:
-            saver.restore(self.sess, checkpoint.model_checkpoint_path)
+            self.saver.restore(self.sess, checkpoint.model_checkpoint_path)
             print("Successfully loaded:", checkpoint.model_checkpoint_path)
         else:
             print "Could not find old checkpoint weights"
 
-        # start training
+    def __play_one_move(self, state, env, epsilon, time=None):
+        """
+        Plays for one step, i.e. agent places one piece on the board.
+        :param state:
+        :param env:
+        :param epsilon:
+        :param time:
+        :return:
+        """
+        readout_t = self.readout.eval(feed_dict={self.s: [state]})
+        a_t, action_index = self.__greedy_action(readout_t, epsilon, time)
+        # update the environment with new action
+        env.set_action(action_index)
+        # get the reward and next state from the environment
+        reward, state_new, terminal = env.get_state_reward_pair()
+
+        return state_new, a_t, reward, terminal
+
+    def __train_minibatch(self, replay_memory, learning_rate):
+        """
+        Trains the model for a minibatch
+        :param replay_memory:
+        :param learning_rate:
+        :return: None
+        """
+        self.__train_minibatch()
+        minibatch = random.sample(replay_memory, BATCH_SIZE)
+
+        # get the batch variables
+        s_batch = [d[0] for d in minibatch]
+        a_batch = [d[1] for d in minibatch]
+        r_batch = [d[2] for d in minibatch]
+        s_new_batch = [d[3] for d in minibatch]
+
+        y_batch = []
+        readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
+
+        for i in range(0, len(minibatch)):
+            terminal = minibatch[i][4]
+            # if terminal, only equals reward
+            if terminal:
+                y_batch.append(r_batch[i])
+            else:
+                y_batch.append(r_batch[i] + GAMMA * np.max(readout_new_batch[i]))
+
+        self.sess.run(self.train_step, feed_dict={self.label: y_batch,
+                                                  self.action: a_batch,
+                                                  self.s: s_batch,
+                                                  self.learning_rate_tf: learning_rate
+                                                  })
+
+    def __train_network(self):
+        """
+        Trains the DQN network
+        :return: None
+        """
+        imagenet = self.__get_image_loader()
+        imagenet.load_next_image()
+        state = self.__get_initial_state()
+        # initialize the environment
+        env = Environment(imagenet.get_image(), state, self.grid_dim, imagenet.get_puzzle_pieces(),
+                          IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
+                          self.input_channels)
+        # saving and loading networks
+        self.__model_loader()
+        # initialize parameters and replay memory
         epsilon = INITIAL_EPSILON
-        t = 0
         learning_rate = LEARNING_RATE
-
-        # Initialize the replay memory
         replay_memory = deque()
-
+        # Start Training
+        t = 0
         while True:
-            # choose an action epsilon greedily
-            readout_t = self.readout.eval(feed_dict={self.s: [state]})
-            # print readout_t
-            a_t, action_index = self.__greedy_action(readout_t, epsilon, t)
-
-            # update the environment with new action
-            env.set_action(action_index)
-
-            # get the reward and next state from the environment
-            reward, state_new, terminal = env.get_state_reward_pair()
-
+            state_new, a_t, reward, terminal = self.__play_one_move(state, env, epsilon, t)
             # store the transition in replay memory
             replay_memory.append((state, a_t, reward, state_new, terminal))
-
+            # if the replay memory is full remove the leftmost entry
             if len(replay_memory) > REPLAY_MEMORY:
                 replay_memory.popleft()
-
+            # if observation is completed then start training mini-batches
             if t > OBSERVE:
-                minibatch = random.sample(replay_memory, BATCH_SIZE)
-
-                # get the batch variables
-                s_batch = [d[0] for d in minibatch]
-                a_batch = [d[1] for d in minibatch]
-                r_batch = [d[2] for d in minibatch]
-                s_new_batch = [d[3] for d in minibatch]
-
-                y_batch = []
-                readout_new_batch = self.readout.eval(feed_dict={self.s: s_new_batch})
-
-                for i in range(0, len(minibatch)):
-                    terminal = minibatch[i][4]
-                    # if terminal, only equals reward
-                    if terminal:
-                        y_batch.append(r_batch[i])
-                    else:
-                        y_batch.append(r_batch[i] + GAMMA * np.max(readout_new_batch[i]))
-
-                self.sess.run(train_step, feed_dict={self.label: y_batch,
-                                                     self.action: a_batch,
-                                                     self.s: s_batch,
-                                                     learning_rate_tf: learning_rate
-                                                    })
-
-            '''
-            print y_batch, self.sess.run([self.readout_action],
-                                         feed_dict={self.action: a_batch,
-                                                    self.s: s_batch}), reward, action_index
-            '''
+                self.__train_minibatch(replay_memory, learning_rate)
             # if terminal state has reached, and number of tries per image has crossed threshold
             # then move to the new image
             if terminal:
                 if imagenet.get_tries_per_image() == TRIES_PER_IMAGE:
                     self.image_handled += 1
+                    # update learning rate after handling number of images = NUMBER_OF_IMAGES_FOR_DECAY
                     if self.image_handled % NUMBER_OF_IMAGES_FOR_DECAY == 0:
                         learning_rate /= LEARNING_DECAY
+                    # test the network on the validation data after training on certain number of images
+                    if self.image_handled % NUM_IMAGES_PER_VALIDATION == 0:
+                        self.test_network()
                     image_present = imagenet.load_next_image()
                     if image_present:
-                        print 'Image Number: %d' % self.image_handled
-                        puzzle_pieces = imagenet.get_puzzle_pieces()
-                        original_image = imagenet.get_image()
-                        env.update_puzzle_pieces(puzzle_pieces)
-                        env.update_original_image(original_image)
+                        env.update_puzzle_pieces(imagenet.get_puzzle_pieces())
+                        env.update_original_image(imagenet.get_image())
                     else:
                         break
                 else:
                     imagenet.increment_tries()
-
-                env.reset()
-
             # update the old values
             state = env.get_state()
             t += 1
-
             # save progress every 10000 iterations
-            if t % 10000 == 0:
-                saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
-                # test the network on the validation data
-                self.test_network()
-            if t % 100 == 0:
+            if t % ITERATIONS_PER_CHECKPOINT == 0:
+                self.saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
+            if t % 500 == 0:
                 print t
-            if t % 2000 == 0:
+            # increase greediness every 4000 iterations
+            if t % ITERATIONS_PER_EPSILON_DECAY == 0:
                 epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
 
     def test_network(self):
@@ -324,31 +314,20 @@ class Agent(object):
         Testing data is meant to check if the algorithm learnt feature representations of objects.
         :return: None
         """
-        imagenet = ImageNet(self.val_dir, self.grid_dim)
+        imagenet = self.__get_image_loader()
         imagenet.load_next_image()
-        puzzle_pieces = imagenet.get_puzzle_pieces()
-        original_image = imagenet.get_image()
-        state = np.zeros([self.input_height, self.input_width, self.input_channels])
-        env = Environment(original_image, state, self.grid_dim, puzzle_pieces,
+
+        state = self.__get_initial_state()
+        # initialize the environment
+        env = Environment(imagenet.get_image(), state, self.grid_dim, imagenet.get_puzzle_pieces(),
                           IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
                           self.input_channels)
-
         reward_list = []
         image_diff_list = []
         episode_reward = 0.0
-        testing = 0
-        total_testing = 40
-
         while True:
-            # choose an action epsilon greedily
-            readout_t = self.readout.eval(feed_dict={self.s: [state]})
-            a_t, action_index = self.__greedy_action(readout_t, epsilon=0.0)
-
-            env.set_action(action_index)
-            reward, state_new, terminal = env.get_state_reward_pair()
-
+            state_new, a_t, reward, terminal = self.__play_one_move(state, env, epsilon=0.0)
             episode_reward = reward + GAMMA * episode_reward
-
             # if terminal state has reached, then move to the next image
             if terminal:
                 image_diff_list.append(env.get_normalized_image_diff())
@@ -357,25 +336,24 @@ class Agent(object):
                 image_present = imagenet.load_next_image()
 
                 if image_present:
-                    testing += 1
-                    if testing == total_testing:
-                        break
-                    puzzle_pieces = imagenet.get_puzzle_pieces()
-                    original_image = imagenet.get_image()
-                    env.update_puzzle_pieces(puzzle_pieces)
-                    env.update_original_image(original_image)
-                    env.reset()
+                    env.update_puzzle_pieces(imagenet.get_puzzle_pieces())
+                    env.update_original_image(imagenet.get_image())
                     episode_reward = 0.0
                 else:
                     break
-
             # update the old values
             state = env.get_state()
-
         # display the reward and image matching performance statistics
         performance_statistics(image_diff_list, reward_list)
 
     def __greedy_action(self, value_function, epsilon, t=None):
+        """
+        Returns an epsilon greedy action
+        :param value_function:
+        :param epsilon:
+        :param t:
+        :return:
+        """
         a_t = np.zeros([self.num_actions])
 
         if t is not None:

@@ -2,9 +2,21 @@ import argparse
 from harpreif.agent import Agent
 
 '''
+SAMPLE RUN INSTRUCTIONS
+
 Local Machine
-python train.py --train_images './train' --val_images './val' --checkpoint_dir './' --grid_dim 8 --num_gradients 8
-Maverick --> python train.py --train_images /work/03713/harshal1/maverick/RLProj/train --val_images '/work/03713/harshal1/maverick/RLProj/val' --checkpoint_dir '/work/03713/harshal1/maverick/RLProj/checkpoint/' --grid_dim 8 --num_gradients 8
+python train.py --train_images './train'
+                --val_images './val'
+                --checkpoint_dir './'
+                --grid_dim 8
+                --num_gradients 8
+
+Maverick -->
+python train.py --train_images /work/03713/harshal1/maverick/RLProj/train
+                --val_images '/work/03713/harshal1/maverick/RLProj/val'
+                --checkpoint_dir '/work/03713/harshal1/maverick/RLProj/checkpoint/'
+                --grid_dim 8
+                --num_gradients 8
 '''
 
 # define the arguments

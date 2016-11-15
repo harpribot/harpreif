@@ -1,11 +1,7 @@
 import numpy as np
 from skimage.feature import hog
 from image_utils import sliding_window, gradient_discretizer
-
-DELAY_REWARD = -0.05
-TERMINAL_REWARD_INTENSITY = 4
-STEPS_MAX = 70
-NUM_BINS = 16
+from myconstants import *
 
 
 class Environment(object):
@@ -36,37 +32,37 @@ class Environment(object):
         self.num_gradients = num_channels
         self.stride = stride
         self.action = None
-        self.placed_location_for_id = dict()
-        self.id_for_placed_location = dict()
+        self.jigsaw_id_to_placed_location = dict()
+        self.placed_location_to_jigsaw_id = dict()
         self.terminal = False
         self.jigsaw_split = np.split(np.array(range(self.image_dim)), self.grid_dim)
         self.steps = 0
 
-    def __update_placed_pieces(self, image_id, place_id):
+    def __update_placed_pieces(self, jigsaw_id, place_id):
         """
         Updates the jigsaw board
-        :param image_id: The image_id of the piece that needs to be placed
+        :param jigsaw_id: The jigsaw_id of the piece that needs to be placed
         :param place_id: The place_id of the board location where the image is to be placed
         :return: None
         """
-        if image_id in self.placed_location_for_id:
-            if self.placed_location_for_id[image_id] != place_id:
-                self.remove_piece(image_id, self.placed_location_for_id[image_id])
+        if jigsaw_id in self.jigsaw_id_to_placed_location:
+            if self.jigsaw_id_to_placed_location[jigsaw_id] != place_id:
+                self.remove_piece(jigsaw_id, self.jigsaw_id_to_placed_location[jigsaw_id])
 
-        if place_id in self.id_for_placed_location:
-            if self.id_for_placed_location[place_id] != image_id:
-                self.remove_piece(self.id_for_placed_location[place_id], place_id)
-                self.place_piece(image_id, place_id)
+        if place_id in self.placed_location_to_jigsaw_id:
+            if self.placed_location_to_jigsaw_id[place_id] != jigsaw_id:
+                self.remove_piece(self.placed_location_to_jigsaw_id[place_id], place_id)
+                self.place_piece(jigsaw_id, place_id)
         else:
-            self.place_piece(image_id, place_id)
+            self.place_piece(jigsaw_id, place_id)
 
     def __update_state(self):
         """
         Updates the state space (self.gamestate) after the suggested action is taken
         :return: None
         """
-        image_id, place_id = self.decode_action()
-        self.__update_placed_pieces(image_id, place_id)
+        jigsaw_id, place_id = self.decode_action()
+        self.__update_placed_pieces(jigsaw_id, place_id)
         self.__render_gamestate()
 
     def __render_gamestate(self):
@@ -84,7 +80,7 @@ class Environment(object):
                                     orientations=self.num_gradients,
                                     pixels_per_cell=self.window,
                                     cells_per_block=(1, 1), visualise=False))
-            assert np.max(gradient) <= 1 and np.min(gradient) >=0, "Gradients are not normalized"
+            assert 0 <= np.max(gradient) <= 1, "Gradients are not normalized"
             assert gradient.size == self.num_gradients, "Gradient size not equal to desired size"
             gradient = gradient_discretizer(gradient, self.bins)
             hog_gradients.extend(gradient)
@@ -96,29 +92,29 @@ class Environment(object):
         assert self.gamestate.shape == hog_gradients.shape, "The state dimension is trying to be altered"
         self.gamestate = hog_gradients
 
-    def remove_piece(self, image_id, place_id):
+    def remove_piece(self, jigsaw_id, place_id):
         """
         Remove the piece from the jigsaw board
-        :param image_id: The id of the image to be removed
+        :param jigsaw_id: The id of the jigsaw piece to be removed
         :param place_id: The place from where the image is to be removed from the jigsaw board
         :return: None
         """
-        self.placed_location_for_id.pop(image_id)
-        self.id_for_placed_location.pop(place_id)
+        self.jigsaw_id_to_placed_location.pop(jigsaw_id)
+        self.placed_location_to_jigsaw_id.pop(place_id)
         placing_range = self.__get_placing_range(place_id)
-        self.update_jigsaw(image_id, placing_range, removal=True)
+        self.update_jigsaw(jigsaw_id, placing_range, removal=True)
 
-    def place_piece(self, image_id, place_id):
+    def place_piece(self, jigsaw_id, place_id):
         """
         Add the piece to the jigsaw board
-        :param image_id: The id of the image to be added to the board
+        :param jigsaw_id: The id of the image to be added to the board
         :param place_id: The place on the board where the image is to be placed.
         :return: None
         """
-        self.placed_location_for_id[image_id] = place_id
-        self.id_for_placed_location[place_id] = image_id
+        self.jigsaw_id_to_placed_location[jigsaw_id] = place_id
+        self.placed_location_to_jigsaw_id[place_id] = jigsaw_id
         placing_range = self.__get_placing_range(place_id)
-        self.update_jigsaw(image_id, placing_range, removal=False)
+        self.update_jigsaw(jigsaw_id, placing_range, removal=False)
 
     def set_action(self, action):
         """
@@ -136,11 +132,10 @@ class Environment(object):
         reward
         :return:The normalized reward
         """
-        if np.all(self.jigsaw_image == self.original_image):
-            print 'Image and Jigsaw matches'
-        difference = self.jigsaw_image - self.original_image
-        squared_diff = difference ** 2
-        max_squared_diff = np.ones(self.jigsaw_image.shape)  # as image is between 0 and 1
+        # if np.all(self.jigsaw_image == self.original_image):
+        #    print 'Image and Jigsaw matches'
+        squared_diff = (self.jigsaw_image - self.original_image) ** 2
+        max_squared_diff = self.jigsaw_image ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
         return -normalized_sum
 
@@ -150,13 +145,6 @@ class Environment(object):
         :return: Reward given by the environment to the agent for the action taken
         """
         # get the reward based on the after-state
-        '''
-        if self.terminal:
-            if np.all(self.jigsaw_image == self.original_image):
-                return POSITIVE_REWARD
-            else:
-                return NEGATIVE_REWARD
-        '''
         if self.terminal:
             return TERMINAL_REWARD_INTENSITY * self.get_normalized_image_diff()
         else:
@@ -172,12 +160,14 @@ class Environment(object):
     def __is_terminal(self):
         """
         Checks if the terminal state has been reached. Terminal state is reached, when all the pieces are
-        placed in the board.
+        placed in the board in the correct order
         :return: None
         """
         # check if self.game-state is terminal
-        if len(self.placed_location_for_id) == len(self.puzzle_pieces):
+        if all(jigsaw_id == place_id for jigsaw_id, place_id
+               in self.jigsaw_id_to_placed_location) or self.steps >= STEPS_MAX:
             self.terminal = True
+            self.reset()  # reset environment when terminal state is reached
 
     def get_state_reward_pair(self):
         """
@@ -186,11 +176,7 @@ class Environment(object):
         :return: (state, reward, terminal) triple
         """
         self.steps += 1
-        if self.steps >= STEPS_MAX:
-            self.terminal = True
-        else:
-            self.__is_terminal()
-
+        self.__is_terminal()
         reward = self.__get_reward()
         next_state = self.__get_next_state()
         return reward, next_state, self.terminal
@@ -198,12 +184,12 @@ class Environment(object):
     def decode_action(self):
         """
         Decoded the action, and returns which piece is to be placed where
-        :return: (image_id, place_id)
+        :return: (jigsaw_id, place_id)
         """
-        image_id = int(self.action / (self.grid_dim * self.grid_dim))
+        jigsaw_id = int(self.action / (self.grid_dim * self.grid_dim))
         place_id = self.action % (self.grid_dim * self.grid_dim)
 
-        return image_id, place_id
+        return jigsaw_id, place_id
 
     def __get_placing_range(self, place_id):
         """
@@ -220,10 +206,10 @@ class Environment(object):
 
         return row_range[0], row_range[-1] + 1, col_range[0], col_range[-1] + 1
 
-    def update_jigsaw(self, image_id, placing_range, removal):
+    def update_jigsaw(self, jigsaw_id, placing_range, removal):
         """
         Update the jigsaw board
-        :param image_id: The id of the puzzle piece to be placed/ removed
+        :param jigsaw_id: The id of the puzzle piece to be placed/ removed
         :param placing_range: The placing range where the image of puzzle piece should be placed /removed
         :param removal: puzzle piece is to be placed or removed. True, means remove.
         :return: None
@@ -232,7 +218,7 @@ class Environment(object):
         if removal:
             self.jigsaw_image[x_s:x_e, y_s:y_e] = np.zeros([x_e-x_s, y_e-y_s])
         else:
-            self.jigsaw_image[x_s:x_e, y_s:y_e] = self.puzzle_pieces[image_id]
+            self.jigsaw_image[x_s:x_e, y_s:y_e] = self.puzzle_pieces[jigsaw_id]
 
         assert self.jigsaw_image.shape == (256, 256), "Trying to alter the image size"
 
@@ -246,7 +232,7 @@ class Environment(object):
     def update_puzzle_pieces(self, puzzle_pieces):
         """
         Update the puzzle pieces for a new image
-        :param puzzle_pieces: The dictionary for image_id as key, and puzzle piece image as value
+        :param puzzle_pieces: The dictionary for jigsaw_id as key, and puzzle piece image as value
         :return: None
         """
         self.puzzle_pieces = puzzle_pieces
@@ -266,7 +252,7 @@ class Environment(object):
         """
         self.jigsaw_image = np.zeros([self.image_dim, self.image_dim])
         self.gamestate = self.initial_gamestate
-        self.placed_location_for_id = dict()
-        self.id_for_placed_location = dict()
+        self.jigsaw_id_to_placed_location = dict()
+        self.placed_location_to_jigsaw_id = dict()
         self.terminal = False
         self.steps = 0

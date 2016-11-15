@@ -5,11 +5,7 @@ from image_loader import ImageLoader
 from harpreif.image_utils import sliding_window, gradient_discretizer
 from skimage.feature import hog
 import cPickle as pickle
-
-WINDOW_SIZE = [8, 8]
-SLIDING_STRIDE = WINDOW_SIZE[0]/2
-IMAGE_HEIGHT = IMAGE_WIDTH = 256
-NUM_BINS = 16
+from harpreif.myconstants import *
 
 
 class Image2Feature(object):
