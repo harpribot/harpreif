@@ -53,7 +53,7 @@ class ImageNet(object):
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
         self.__break_into_jigzaw_pieces()
         self.image_ptr += 1
-        self.tries = 0
+        self.tries = 1
 
         return True
 
