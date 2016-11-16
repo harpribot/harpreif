@@ -1,3 +1,4 @@
+import sys
 from scipy import ndimage
 import glob
 import image_slicer
@@ -44,7 +45,7 @@ class ImageNet(object):
         """
         if len(self.image_list) == self.image_ptr:
             return False
-        print 'Loaded Image #%d ...' % self.image_ptr
+        sys.stdout.write('Loaded Image #' + str(self.image_ptr) + ' ...\n')
         self.image = ndimage.imread(self.image_list[self.image_ptr])
         is_color = self.__check_color()
         if is_color:

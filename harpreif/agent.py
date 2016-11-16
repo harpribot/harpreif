@@ -7,6 +7,7 @@ import random
 import numpy as np
 from myconstants import *
 from model.creator import Creator
+import sys
 
 
 class Agent(Creator):
@@ -45,11 +46,11 @@ class Agent(Creator):
         self.train_dir = train_dir
         self.val_dir = val_dir
         self.checkpoint_dir = checkpoint_dir
-        print 'Initializing Session...'
+        sys.stdout.write('Initializing Session...\n')
         self.sess = tf.InteractiveSession()
-        print 'Creating Network...'
+        sys.stdout.write('Creating Network...\n')
         self.__create_network()
-        print 'Training Network...'
+        sys.stdout.write('Training Network...\n')
         self.__train_network()
 
     def __create_network(self):
@@ -89,9 +90,9 @@ class Agent(Creator):
 
         if checkpoint and checkpoint.model_checkpoint_path:
             self.saver.restore(self.sess, checkpoint.model_checkpoint_path)
-            print("Successfully loaded:", checkpoint.model_checkpoint_path)
+            sys.stdout.write("Successfully loaded: " + checkpoint.model_checkpoint_path + '\n')
         else:
-            print "Could not find old checkpoint weights"
+            sys.stdout.write("Could not find old checkpoint weights\n")
 
     def __play_one_move(self, state, env, epsilon, time=None):
         """
@@ -199,7 +200,7 @@ class Agent(Creator):
             if t % ITERATIONS_PER_CHECKPOINT == 0:
                 self.saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
             if t % 500 == 0:
-                print t
+                sys.stdout.write(str(t) + '\n')
             # increase greediness every 4000 iterations
             if t % ITERATIONS_PER_EPSILON_DECAY == 0:
                 epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
