@@ -135,7 +135,7 @@ class Environment(object):
         # if np.all(self.jigsaw_image == self.original_image):
         #    print 'Image and Jigsaw matches'
         squared_diff = (self.jigsaw_image - self.original_image) ** 2
-        max_squared_diff = self.jigsaw_image ** 2
+        max_squared_diff = self.original_image ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
         return -normalized_sum
 
