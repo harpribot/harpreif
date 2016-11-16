@@ -45,7 +45,7 @@ class ImageNet(object):
         """
         if len(self.image_list) == self.image_ptr:
             return False
-        sys.stdout.write('Loaded Image #' + str(self.image_ptr) + ' ...\n')
+        sys.stderr.write('Loaded Image #' + str(self.image_ptr) + ' ...\n')
         self.image = ndimage.imread(self.image_list[self.image_ptr])
         is_color = self.__check_color()
         if is_color:
