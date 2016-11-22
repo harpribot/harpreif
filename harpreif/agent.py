@@ -183,7 +183,7 @@ class Agent(Creator):
                     if self.image_handled % NUMBER_OF_IMAGES_FOR_DECAY == 0:
                         learning_rate /= LEARNING_DECAY
                     # test the network on the validation data after training on certain number of images
-                    if self.image_handled % NUM_IMAGES_PER_VALIDATION == 0:
+                    if self.image_handled % NUM_IMAGES_PER_VALIDATION == 1:
                         self.test_network()
                     image_present = imagenet.load_next_image()
                     if image_present:
@@ -197,7 +197,7 @@ class Agent(Creator):
             state = env.get_state()
             t += 1
             # save progress every 10000 iterations
-            if t % ITERATIONS_PER_CHECKPOINT == 0:
+            if t % ITERATIONS_PER_CHECKPOINT == 1:
                 self.saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
             if t % 500 == 0:
                 sys.stderr.write(str(t) + '\n')
