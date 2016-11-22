@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 
 def sliding_window(image, step_size, window_size):
@@ -29,6 +30,5 @@ def gradient_discretizer(gradient, bins):
 def performance_statistics(image_diff_list, reward_list):
     image_diff_list = np.array(image_diff_list)
     reward_list = np.array(reward_list)
-
-    print 'The image matching performance - %f' % np.average(image_diff_list)
-    print 'The average accumulated reward - %f' % np.average(reward_list)
+    sys.stderr.write('The image matching performance - ' + str(np.average(image_diff_list)) + '\n')
+    sys.stderr.write('The average accumulated reward - ' + str(np.average(reward_list)) + '\n')
