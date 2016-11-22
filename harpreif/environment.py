@@ -2,6 +2,7 @@ import numpy as np
 from skimage.feature import hog
 from image_utils import sliding_window, gradient_discretizer
 from myconstants import *
+import sys
 
 
 class Environment(object):
@@ -141,6 +142,10 @@ class Environment(object):
         squared_diff = (self.jigsaw_image - self.original_image) ** 2
         max_squared_diff = self.original_image ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
+        sys.stderr.write('Number of different locations occupied' + str(len(self.placed_location_to_jigsaw_id)) + '\n')
+        sys.stderr.write('Number of correctly placed locations' +
+                         str(np.sum([key == value for key, value in self.placed_location_to_jigsaw_id.iteritems()])))
+
         return -normalized_sum
 
     def __get_reward(self):
