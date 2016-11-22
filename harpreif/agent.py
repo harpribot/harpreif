@@ -212,7 +212,7 @@ class Agent(Creator):
         Testing data is meant to check if the algorithm learnt feature representations of objects.
         :return: None
         """
-        imagenet = self.__get_image_loader()
+        imagenet = self.__get_image_loader(NUM_VALIDATION_IMAGES)
         imagenet.load_next_image()
 
         state = self.__get_initial_state()
