@@ -21,7 +21,7 @@ opt = parser.parse_args()
 
 num_actions = opt.grid_dim ** 4
 
-im2f = Image2Feature(opt.test_images, opt.saved_checkpoint, num_actions, opt.num_gradients)
+im2f = Image2Feature(opt.test_images, opt.saved_checkpoint, opt.checkpoint_iter, num_actions, opt.num_gradients)
 image2feature_map, feat_sz = im2f.image2feature(save_transform=True, im2f_loc= opt.image_feat_dir)
 
 
