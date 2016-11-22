@@ -183,8 +183,8 @@ class Agent(Creator):
                     if self.image_handled % NUMBER_OF_IMAGES_FOR_DECAY == 0:
                         learning_rate /= LEARNING_DECAY
                     # test the network on the validation data after training on certain number of images
-                    if self.image_handled % NUM_IMAGES_PER_VALIDATION == 1:
-                        self.test_network()
+                    # if self.image_handled % NUM_IMAGES_PER_VALIDATION == 1:
+                    #    self.test_network()
                     image_present = imagenet.load_next_image()
                     if image_present:
                         env.update_puzzle_pieces(imagenet.get_puzzle_pieces())
