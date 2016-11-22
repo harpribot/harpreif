@@ -142,9 +142,10 @@ class Environment(object):
         squared_diff = (self.jigsaw_image - self.original_image) ** 2
         max_squared_diff = self.original_image ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
-        sys.stderr.write('Number of different locations occupied' + str(len(self.placed_location_to_jigsaw_id)) + '\n')
-        sys.stderr.write('Number of correctly placed locations' +
-                         str(np.sum([key == value for key, value in self.placed_location_to_jigsaw_id.iteritems()])))
+        sys.stderr.write('Number of different locations occupied:' + str(len(self.placed_location_to_jigsaw_id)) + '\n')
+        sys.stderr.write('Number of correctly placed locations:' +
+                         str(np.sum([key == value for key, value in
+                                     self.placed_location_to_jigsaw_id.iteritems()])) + '\n')
 
         return -normalized_sum
 
