@@ -9,7 +9,7 @@ from model.creator import Creator
 
 
 class Image2Feature(Creator):
-    def __init__(self, image_dir, checkpoint_dir, num_actions, num_gradients):
+    def __init__(self, image_dir, checkpoint_dir, checkpoint_iter, num_actions, num_gradients):
         """
 
         :param image_dir: The test directory for images
@@ -21,6 +21,7 @@ class Image2Feature(Creator):
         self.bins = np.array([x / float(NUM_BINS) for x in range(0, NUM_BINS, 1)])
         self.sess = None
         self.checkpoint_dir = checkpoint_dir
+        self.checkpoint_iter = checkpoint_iter
         self.num_actions = num_actions
         self.num_gradients = num_gradients
         self.input_channels = num_gradients
@@ -89,10 +90,11 @@ class Image2Feature(Creator):
         """
         saver = tf.train.Saver()
         self.sess.run(tf.initialize_all_variables())
+        checkpoint_name = self.checkpoint_dir + "saved_networks/" + "jigsaw-dqn-" + str(self.checkpoint_iter)
         checkpoint = tf.train.get_checkpoint_state(self.checkpoint_dir + "saved_networks")
-        if checkpoint and checkpoint.model_checkpoint_path:
-            saver.restore(self.sess, checkpoint.model_checkpoint_path)
-            print("Successfully loaded:", checkpoint.model_checkpoint_path)
+        if checkpoint and (checkpoint_name in checkpoint.all_model_checkpoint_paths):
+            saver.restore(self.sess, checkpoint_name)
+            print("Successfully loaded:", checkpoint_name)
         else:
             raise ValueError("No checkpoint found. You must have saved weights")
 
