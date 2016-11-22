@@ -134,6 +134,10 @@ class Environment(object):
         """
         # if np.all(self.jigsaw_image == self.original_image):
         #    print 'Image and Jigsaw matches'
+        assert self.original_image.shape == (256, 256), 'Faulty original image has dimension:' + \
+                                                        str(self.original_image.shape)
+        assert self.jigsaw_image.shape == (256, 256), 'Faulty jigsaw image has dimension:' + \
+                                                      str(self.jigsaw_image.shape)
         squared_diff = (self.jigsaw_image - self.original_image) ** 2
         max_squared_diff = self.original_image ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)

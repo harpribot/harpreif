@@ -9,9 +9,9 @@ python test_nb_finder.py --image_feat_pickle './image2feature.p' --nb_out_file '
 '''
 
 parser = argparse.ArgumentParser()
-parser.add_argument('image_feat_pickle', type=str, default='./image2feature.p')
-parser.add_argument('nb_out_file', type=str, default='./neighbors.txt')
-parser.add_argument('num_neighbors', type=int, default=10)
+parser.add_argument('--image_feat_pickle', type=str, default='./image2feature.p')
+parser.add_argument('--nb_out_file', type=str, default='./neighbors.txt')
+parser.add_argument('--num_neighbors', type=int, default=10)
 opt = parser.parse_args()
 
 
