@@ -169,7 +169,7 @@ class Agent(Creator):
         replay_memory = deque()
         # Start Training
         t = 0
-        epsiode_reward = 0.
+        episode_reward = 0.
         episode_reward_list = []
         while True:
             state_new, a_t, reward, terminal = self.__play_one_move(state, env, reward_type, epsilon, t)
