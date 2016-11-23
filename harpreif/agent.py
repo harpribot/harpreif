@@ -113,6 +113,7 @@ class Agent(Creator):
         env.set_action(action_index)
         # get the reward and next state from the environment
         reward, state_new, terminal = env.get_state_reward_pair(reward_type)
+        sys.stderr.write(str(reward) + '\n')
 
         return state_new, a_t, reward, terminal
 
