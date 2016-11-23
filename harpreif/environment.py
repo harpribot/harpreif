@@ -132,7 +132,7 @@ class Environment(object):
         self.action = action
         self.__update_state()
 
-    def get_normalized_image_diff(self):
+    def get_normalized_image_diff_reward(self):
         """
         Get the normalized image difference between the original image and jigsaw solved image. The negative of it is
         reward
@@ -155,6 +155,11 @@ class Environment(object):
 
         return 10 * (0.5 - normalized_sum)
 
+    def get_matching_reward(self):
+        total_matches = np.sum([key == value for key, value in self.placed_location_to_jigsaw_id.iteritems()])
+        total_pieces = len(self.puzzle_pieces)
+        return total_matches - total_pieces/2.0
+
     def __get_reward(self):
         """
         For the given action, transmitted to the environment by the agent, the environment rewards the agent.
@@ -162,7 +167,7 @@ class Environment(object):
         """
         # get the reward based on the after-state
         if self.terminal:
-            return self.get_normalized_image_diff()
+            return self.get_normalized_image_diff_reward() + self.get_matching_reward()
         else:
             return self.reward + DELAY_REWARD
 
