@@ -145,7 +145,7 @@ class Environment(object):
         assert self.jigsaw_image.shape == (256, 256), 'Faulty jigsaw image has dimension:' + \
                                                       str(self.jigsaw_image.shape)
         squared_diff = (self.jigsaw_image - self.original_image) ** 2
-        max_squared_diff = self.original_image ** 2
+        max_squared_diff = np.ones([256, 256]) ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
         sys.stderr.write('Number of different locations occupied:' +
                          str(len(self.placed_location_to_jigsaw_id)) + '\n')
