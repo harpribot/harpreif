@@ -153,7 +153,7 @@ class Environment(object):
                          str(np.sum([key == value for key, value in
                                      self.placed_location_to_jigsaw_id.iteritems()])) + '\n')
 
-        return -normalized_sum
+        return 10 * (0.5 - normalized_sum)
 
     def __get_reward(self):
         """
@@ -180,8 +180,11 @@ class Environment(object):
         :return: None
         """
         # check if self.game-state is terminal
-        if all(jigsaw_id == place_id for jigsaw_id, place_id in self.jigsaw_id_to_placed_location.iteritems()) \
-                or self.steps >= STEPS_MAX:
+        if len(self.jigsaw_id_to_placed_location) == len(self.puzzle_pieces):
+            if all(jigsaw_id == place_id for jigsaw_id, place_id in self.jigsaw_id_to_placed_location.iteritems()):
+                self.terminal = True
+
+        if self.steps >= STEPS_MAX:
             self.terminal = True
 
         return self.terminal

@@ -99,7 +99,9 @@ class Creator(object):
 
         self.readout_action = tf.reduce_sum(tf.mul(self.readout, self.action))
         self.cost = tf.reduce_mean(tf.square(self.label - self.readout_action))
-        self.cost = debug_printer(self.cost, "Cost(MINIMIZE): ")
+        _ = debug_printer(tf.reduce_max(self.label), "LABEL: ")
+        _ = debug_printer(tf.reduce_max(self.readout_action), "PREDICTION: ")
+        # self.cost = debug_printer(self.cost, "Cost(MINIMIZE): ")
 
     def _form_trainer(self):
         """
@@ -107,4 +109,4 @@ class Creator(object):
         :return: None
         """
         self.learning_rate_tf = tf.placeholder(tf.float32, shape=[])
-        self.train_step = tf.train.AdadeltaOptimizer(self.learning_rate_tf).minimize(self.cost)
+        self.train_step = tf.train.AdamOptimizer(self.learning_rate_tf).minimize(self.cost)
