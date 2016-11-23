@@ -26,9 +26,10 @@ parser.add_argument('--val_images', type=str)
 parser.add_argument('--checkpoint_dir', type=str)
 parser.add_argument('--grid_dim', type=int, default=8)
 parser.add_argument('--num_gradients', type=int, default=8)
+parser.add_argument('--reward_type', type=int, default=1)
 opt = parser.parse_args()
 num_actions = opt.grid_dim ** 4
 
 # create and train the agent
 agent = Agent(num_actions, opt.grid_dim, opt.num_gradients)
-agent.play_game(opt.train_images, opt.val_images, opt.checkpoint_dir)
+agent.play_game(opt.train_images, opt.val_images, opt.checkpoint_dir, opt.reward_type)

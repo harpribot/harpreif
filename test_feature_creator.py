@@ -28,5 +28,5 @@ image2feature_map, feat_sz = im2f.image2feature(save_transform=True, im2f_loc= o
 
 
 '''
-python test_feature_creator.py --test_images '/work/03713/harshal1/maverick/RLProj/test' --saved_checkpoint'/work/03713/harshal1/maverick/RLProj/checkpoint/' --checkpoint_iter 20001 --image_feat_dir './' --grid_dim 8 --num_gradients 8
+python test_feature_creator.py --test_images '/work/03713/harshal1/maverick/RLProj/test' --saved_checkpoint'/work/03713/harshal1/maverick/RLProj/checkpoint/' --checkpoint_iter 40001 --image_feat_dir './40001/' --grid_dim 4 --num_gradients 8
 '''

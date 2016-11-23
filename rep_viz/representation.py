@@ -81,7 +81,10 @@ class NearestNeighbour(object):
         object_list = [[int(x.split('/')[-1].split('_')[0]) for x in row] for row in result_list]
         image_object = [x[0] for x in object_list]
         neighbors_object = [x[1:] for x in object_list]
-        nb_bool = [[x == y for x in row] for row, y in zip(neighbors_object, image_object)]
+        image = [x[0] for x in result_list]
+        neighbors = [x[1:] for x in result_list]
+        nb_bool = [[x == y and im != n for x, n in zip(row, nb)] for row, y, nb, im in
+                   zip(neighbors_object, image_object, neighbors, image)]
         assert np.array(nb_bool).shape[1] == num_neighbors, 'Neighbor info not obtained'
         total_true_nb = [sum(x) for x in nb_bool]
 

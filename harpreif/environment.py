@@ -160,14 +160,24 @@ class Environment(object):
         total_pieces = len(self.puzzle_pieces)
         return total_matches - total_pieces/2.0
 
-    def __get_reward(self):
+    def get_placing_reward(self):
+        total_placed_pieces = len(self.placed_location_to_jigsaw_id)
+        total_pieces = len(self.puzzle_pieces)
+        return total_placed_pieces - total_pieces/2.0
+
+    def __get_reward(self, rt):
         """
         For the given action, transmitted to the environment by the agent, the environment rewards the agent.
         :return: Reward given by the environment to the agent for the action taken
         """
         # get the reward based on the after-state
         if self.terminal:
-            return min(5, max(-5, self.get_normalized_image_diff_reward())) + self.get_matching_reward()
+            if rt == 0:
+                return min(5, max(-5, self.get_normalized_image_diff_reward())) + self.get_matching_reward()
+            elif rt == 1:
+                return self.get_matching_reward()
+            elif rt == 2:
+                return (self.get_matching_reward() + self.get_placing_reward())/2.0
         else:
             return self.reward + DELAY_REWARD
 
@@ -194,7 +204,7 @@ class Environment(object):
 
         return self.terminal
 
-    def get_state_reward_pair(self):
+    def get_state_reward_pair(self, rt):
         """
         Return the (s,r, terminal) --> state, reward pair by the environment to the agent in response to the action
         taken by the agent
@@ -202,7 +212,7 @@ class Environment(object):
         """
         self.steps += 1
         terminal = self.__is_terminal()
-        reward = self.__get_reward()
+        reward = self.__get_reward(rt)
         next_state = self.__get_next_state()
         if terminal:
             self.reset()

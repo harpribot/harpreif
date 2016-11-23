@@ -8,6 +8,7 @@ import numpy as np
 from myconstants import *
 from model.creator import Creator
 import sys
+import cPickle as pickle
 
 
 class Agent(Creator):
@@ -35,12 +36,15 @@ class Agent(Creator):
         self.image_handled = 0
         Creator.__init__(self, self.input_channels, self.num_actions, self.input_height, self.input_width)
 
-    def play_game(self, train_dir, val_dir, checkpoint_dir):
+    def play_game(self, train_dir, val_dir, checkpoint_dir, reward_type):
         """
         Initiates gameplay using DQN based reinforcement learning
         :param train_dir: The directory containing the training images
         :param val_dir: The directory containing the testing images
         :param checkpoint_dir: The directory where checkpoints are to be stored.
+        :param reward_type: The reward type: 0 -> normalized_image_diff  + matching ,
+                                             1 -> matching,
+                                             2 -> matching + placing
         :return: None
         """
         self.train_dir = train_dir
@@ -51,7 +55,7 @@ class Agent(Creator):
         sys.stderr.write('Creating Network...\n')
         self.__create_network()
         sys.stderr.write('Training Network...\n')
-        self.__train_network()
+        self.__train_network(reward_type)
 
     def __create_network(self):
         """
@@ -94,7 +98,7 @@ class Agent(Creator):
         else:
             sys.stderr.write("Could not find old checkpoint weights\n")
 
-    def __play_one_move(self, state, env, epsilon, time=None):
+    def __play_one_move(self, state, env, reward_type, epsilon, time=None):
         """
         Plays for one step, i.e. agent places one piece on the board.
         :param state:
@@ -108,8 +112,7 @@ class Agent(Creator):
         # update the environment with new action
         env.set_action(action_index)
         # get the reward and next state from the environment
-        reward, state_new, terminal = env.get_state_reward_pair()
-        print reward
+        reward, state_new, terminal = env.get_state_reward_pair(reward_type)
 
         return state_new, a_t, reward, terminal
 
@@ -145,7 +148,7 @@ class Agent(Creator):
                                                   self.learning_rate_tf: learning_rate
                                                   })
 
-    def __train_network(self):
+    def __train_network(self, reward_type):
         """
         Trains the DQN network
         :return: None
@@ -165,8 +168,11 @@ class Agent(Creator):
         replay_memory = deque()
         # Start Training
         t = 0
+        epsiode_reward = 0.
+        episode_reward_list = []
         while True:
-            state_new, a_t, reward, terminal = self.__play_one_move(state, env, epsilon, t)
+            state_new, a_t, reward, terminal = self.__play_one_move(state, env, reward_type, epsilon, t)
+            episode_reward = reward + GAMMA * episode_reward
             # store the transition in replay memory
             replay_memory.append((state, a_t, reward, state_new, terminal))
             # if the replay memory is full remove the leftmost entry
@@ -185,20 +191,25 @@ class Agent(Creator):
                         learning_rate /= LEARNING_DECAY
                     # test the network on the validation data after training on certain number of images
                     # if self.image_handled % NUM_IMAGES_PER_VALIDATION == 1:
-                    #    self.test_network()
+                    #    self.test_network(reward_type)
+                    episode_reward_list.append(episode_reward)
                     image_present = imagenet.load_next_image()
                     if image_present:
+                        episode_reward = 0.
                         env.update_puzzle_pieces(imagenet.get_puzzle_pieces())
                         env.update_original_image(imagenet.get_image())
                     else:
                         break
                 else:
+                    episode_reward = 0.
                     imagenet.increment_tries()
             # update the old values
             state = env.get_state()
             t += 1
             # save progress every 10000 iterations
             if t % ITERATIONS_PER_CHECKPOINT == 1:
+                pickle.dump(episode_reward_list, open(self.checkpoint_dir +
+                                                      'saved_networks/' + 'episode_reward-' + str(t) + '.p', 'wb'))
                 self.saver.save(self.sess, self.checkpoint_dir + 'saved_networks/' + GAME + '-dqn', global_step=t)
             if t % 500 == 0:
                 sys.stderr.write(str(t) + '\n')
@@ -206,7 +217,7 @@ class Agent(Creator):
             if t % ITERATIONS_PER_EPSILON_DECAY == 0:
                 epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 100
 
-    def test_network(self):
+    def test_network(self, reward_type):
         """
         Network Testing is done on the validation data, and the testing data is to see if the representation
         is learnt efficiently. Testing data is not meant to check RL accuracy. The validation data is meant for that.
@@ -225,7 +236,7 @@ class Agent(Creator):
         image_diff_list = []
         episode_reward = 0.0
         while True:
-            state_new, a_t, reward, terminal = self.__play_one_move(state, env, epsilon=0.0)
+            state_new, a_t, reward, terminal = self.__play_one_move(state, env, reward_type, epsilon=0.0)
             episode_reward = reward + GAMMA * episode_reward
             # if terminal state has reached, then move to the next image
             if terminal:
