@@ -167,7 +167,7 @@ class Environment(object):
         """
         # get the reward based on the after-state
         if self.terminal:
-            return self.get_normalized_image_diff_reward() + self.get_matching_reward()
+            return min(5, max(-5, self.get_normalized_image_diff_reward())) + self.get_matching_reward()
         else:
             return self.reward + DELAY_REWARD
 
