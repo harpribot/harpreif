@@ -87,7 +87,7 @@ class Creator(object):
         :return: None
         """
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
-        self.readout = debug_printer(self.readout, "Output Layer output: ")
+        # self.readout = debug_printer(self.readout, "Output Layer output: ")
 
     def _define_loss(self):
         """

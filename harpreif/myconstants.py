@@ -17,7 +17,7 @@ IMAGE_HEIGHT = IMAGE_WIDTH = 256     # the dimension of a true image
 TRIES_PER_IMAGE = 1                  # Number of tries to do per image
 ALPHA = 0.01                         # Leaky RELU parameter - prevents dyeing neurons
 DELAY_REWARD = -0.05                 # the reward given for each action that leads to non-terminal state
-TERMINAL_REWARD_INTENSITY = 5        # the intensity of penalization of reward at terminal state
+REPLACING_PENALTY = -0.1             # Penalty when removing an already placed piece
 STEPS_MAX = 75                       # The maximum allowed step for each episode
 NUM_BINS = 16                        # Number of bins in which the histogram is discretised
 NUM_VALIDATION_IMAGES = 100          # Number of images to be used for validation testing

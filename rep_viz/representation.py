@@ -56,7 +56,8 @@ class NearestNeighbour(object):
         for key, value in self.im2index.iteritems():
             neighbor_list = [key]
             similarity_scores = self.similarity_mat[value]
-            ind = np.argpartition(similarity_scores, -num_neighbors)[-num_neighbors:]
+            # removes best match as same as key
+            ind = np.argpartition(similarity_scores, -(num_neighbors + 1))[-(num_neighbors + 1):-1]
             ind = ind[np.argsort(similarity_scores[ind])]
             neighbors = [self.index2im[x] for x in ind]
             neighbor_list.extend(neighbors)
@@ -78,19 +79,20 @@ class NearestNeighbour(object):
         :return: None
         """
         object_list = [[int(x.split('/')[-1].split('_')[0]) for x in row] for row in result_list]
-        object_list = [x[:-1] for x in object_list]
         image_object = [x[0] for x in object_list]
         neighbors_object = [x[1:] for x in object_list]
         nb_bool = [[x == y for x in row] for row, y in zip(neighbors_object, image_object)]
+        assert np.array(nb_bool).shape[1] == num_neighbors, 'Neighbor info not obtained'
         total_true_nb = [sum(x) for x in nb_bool]
 
         total_matches = sum(total_true_nb)
+        assert len(total_true_nb) == len(image_object), 'Something is wrong...'
         average_match_per_obj = total_matches/float(len(total_true_nb))
 
         print 'Average Neighbor found per object: %f' % average_match_per_obj
+        print min(total_true_nb)
 
         # plot the histogram plot for number of images with more than x matches
-        x = range(num_neighbors)
-        hist_y = [sum([val > match_count for val in total_true_nb]) for match_count in x]
-        plt.bar(x, hist_y, align='center', alpha=0.5)
+        # print plt.hist(total_true_nb, histtype='bar', rwidth=0.8)
+        print plt.hist(total_true_nb, bins=np.arange(np.min(total_true_nb), np.max(total_true_nb)+1), align='left')
         plt.show()

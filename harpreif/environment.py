@@ -38,6 +38,7 @@ class Environment(object):
         self.jigsaw_split = np.split(np.array(range(self.image_dim)), self.grid_dim)
         self.steps = 0
         self.terminal = False
+        self.reward = 0.
 
     def __update_placed_pieces(self, jigsaw_id, place_id):
         """
@@ -46,16 +47,20 @@ class Environment(object):
         :param place_id: The place_id of the board location where the image is to be placed
         :return: None
         """
+        self.reward = 0.
         if jigsaw_id in self.jigsaw_id_to_placed_location:
             if self.jigsaw_id_to_placed_location[jigsaw_id] != place_id:
                 self.remove_piece(jigsaw_id, self.jigsaw_id_to_placed_location[jigsaw_id])
+                self.reward += REPLACING_PENALTY
+            else:
+                self.reward += 4 * REPLACING_PENALTY
+                return
 
         if place_id in self.placed_location_to_jigsaw_id:
-            if self.placed_location_to_jigsaw_id[place_id] != jigsaw_id:
-                self.remove_piece(self.placed_location_to_jigsaw_id[place_id], place_id)
-                self.place_piece(jigsaw_id, place_id)
-        else:
-            self.place_piece(jigsaw_id, place_id)
+            self.remove_piece(self.placed_location_to_jigsaw_id[place_id], place_id)
+            self.reward += REPLACING_PENALTY
+
+        self.place_piece(jigsaw_id, place_id)
 
     def __update_state(self):
         """
@@ -142,7 +147,8 @@ class Environment(object):
         squared_diff = (self.jigsaw_image - self.original_image) ** 2
         max_squared_diff = self.original_image ** 2
         normalized_sum = np.sum(squared_diff) / np.sum(max_squared_diff)
-        sys.stderr.write('Number of different locations occupied:' + str(len(self.placed_location_to_jigsaw_id)) + '\n')
+        sys.stderr.write('Number of different locations occupied:' +
+                         str(len(self.placed_location_to_jigsaw_id)) + '\n')
         sys.stderr.write('Number of correctly placed locations:' +
                          str(np.sum([key == value for key, value in
                                      self.placed_location_to_jigsaw_id.iteritems()])) + '\n')
@@ -156,9 +162,9 @@ class Environment(object):
         """
         # get the reward based on the after-state
         if self.terminal:
-            return TERMINAL_REWARD_INTENSITY * self.get_normalized_image_diff()
+            return self.get_normalized_image_diff()
         else:
-            return DELAY_REWARD
+            return self.reward + DELAY_REWARD
 
     def __get_next_state(self):
         """
