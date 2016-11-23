@@ -29,11 +29,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="myconstants.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="myconstants.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/harpreif/myconstants.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="35" selection-start-line="14" selection-start-column="35" selection-end-line="14" selection-end-column="35" />
+            <state relative-caret-position="330">
+              <caret line="22" column="34" selection-start-line="22" selection-start-column="34" selection-end-line="22" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -81,11 +81,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="creator.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="creator.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/creator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="75" column="21" selection-start-line="75" selection-start-column="21" selection-end-line="75" selection-end-column="21" />
+            <state relative-caret-position="270">
+              <caret line="102" column="0" selection-start-line="102" selection-start-column="0" selection-end-line="102" selection-end-column="0" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -96,8 +96,8 @@
       <file leaf-file-name="environment.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/harpreif/environment.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="160" column="43" selection-start-line="160" selection-start-column="43" selection-end-line="160" selection-end-column="43" />
+            <state relative-caret-position="240">
+              <caret line="160" column="47" selection-start-line="160" selection-start-column="47" selection-end-line="160" selection-end-column="47" />
               <folding />
             </state>
           </provider>
@@ -168,9 +168,9 @@
         <option value="$PROJECT_DIR$/neighbors.txt" />
         <option value="$PROJECT_DIR$/rep_viz/representation.py" />
         <option value="$PROJECT_DIR$/harpreif/agent.py" />
-        <option value="$PROJECT_DIR$/model/creator.py" />
         <option value="$PROJECT_DIR$/harpreif/environment.py" />
         <option value="$PROJECT_DIR$/harpreif/myconstants.py" />
+        <option value="$PROJECT_DIR$/model/creator.py" />
       </list>
     </option>
   </component>
@@ -540,34 +540,6 @@
       <option name="presentableId" value="Default" />
       <updated>1476581449072</updated>
     </task>
-    <task id="LOCAL-00007" summary="Adds discretization in gradients to make the state space finite">
-      <created>1478106882794</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1478106882794</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Updates the training script">
-      <created>1478150016729</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1478150016729</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Adds validation testing every 1000 iterations">
-      <created>1478150057378</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1478150057378</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Adds checker for image being color or grayscale">
-      <created>1478151610944</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1478151610944</updated>
-    </task>
     <task id="LOCAL-00011" summary="minor updates">
       <created>1478191116583</created>
       <option name="number" value="00011" />
@@ -883,7 +855,35 @@
       <option name="project" value="LOCAL" />
       <updated>1479873628903</updated>
     </task>
-    <option name="localTasksCounter" value="56" />
+    <task id="LOCAL-00056" summary="Fixes Terminal Reward bug">
+      <created>1479877418866</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1479877418866</updated>
+    </task>
+    <task id="LOCAL-00057" summary=".">
+      <created>1479877498427</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1479877498428</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Adds matches to terminal reward.">
+      <created>1479880103704</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1479880103704</updated>
+    </task>
+    <task id="LOCAL-00059" summary=".">
+      <created>1479880282199</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1479880282199</updated>
+    </task>
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="TodoView">
@@ -899,7 +899,7 @@
     <frame x="0" y="0" width="1280" height="800" extended-state="0" />
     <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27705976" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27705976" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32936507" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32890856" sideWeight="0.503231" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -969,8 +969,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="adds correct completion checker to environment" />
-    <MESSAGE value="adds fix to the indentation" />
     <MESSAGE value="updates the parameters of the model and training statistics" />
     <MESSAGE value="removes usless debug prints" />
     <MESSAGE value="Bugfix - Tries per image was done one time more than desired" />
@@ -993,6 +991,8 @@
     <MESSAGE value="Removes validation testing" />
     <MESSAGE value="adds sanity checker for correct placement" />
     <MESSAGE value="Adds flexibility in choosing checkpoints while testing" />
+    <MESSAGE value="Fixes Terminal Reward bug" />
+    <MESSAGE value="Adds matches to terminal reward." />
     <MESSAGE value="." />
     <option name="LAST_COMMIT_MESSAGE" value="." />
   </component>
@@ -1274,29 +1274,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model/creator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="75" column="21" selection-start-line="75" selection-start-column="21" selection-end-line="75" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/harpreif/environment.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="160" column="43" selection-start-line="160" selection-start-column="43" selection-end-line="160" selection-end-column="43" />
+        <state relative-caret-position="240">
+          <caret line="160" column="47" selection-start-line="160" selection-start-column="47" selection-end-line="160" selection-end-column="47" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/harpreif/myconstants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="35" selection-start-line="14" selection-start-column="35" selection-end-line="14" selection-end-column="35" />
+        <state relative-caret-position="330">
+          <caret line="22" column="34" selection-start-line="22" selection-start-column="34" selection-end-line="22" selection-end-column="34" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model/creator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="102" column="0" selection-start-line="102" selection-start-column="0" selection-end-line="102" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

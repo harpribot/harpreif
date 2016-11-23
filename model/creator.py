@@ -99,9 +99,7 @@ class Creator(object):
 
         self.readout_action = tf.reduce_sum(tf.mul(self.readout, self.action))
         self.cost = tf.reduce_mean(tf.square(self.label - self.readout_action))
-        _ = debug_printer(tf.reduce_max(self.label), "LABEL: ")
-        _ = debug_printer(tf.reduce_max(self.readout_action), "PREDICTION: ")
-        # self.cost = debug_printer(self.cost, "Cost(MINIMIZE): ")
+        self.cost = debug_printer(self.cost, "Cost(MINIMIZE): ")
 
     def _form_trainer(self):
         """

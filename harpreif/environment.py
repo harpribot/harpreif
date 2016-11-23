@@ -153,7 +153,7 @@ class Environment(object):
                          str(np.sum([key == value for key, value in
                                      self.placed_location_to_jigsaw_id.iteritems()])) + '\n')
 
-        return 10 * (0.5 - normalized_sum)
+        return 16 * (0.5 - normalized_sum)
 
     def get_matching_reward(self):
         total_matches = np.sum([key == value for key, value in self.placed_location_to_jigsaw_id.iteritems()])
