@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
+from rep_viz.plotter import Plotter
 
 
 class NearestNeighbour(object):
@@ -24,12 +25,17 @@ class NearestNeighbour(object):
         :return: None
         """
         self.X = np.zeros([self.numimages, self.feature_size])
+        self.Y = []
         counter = 0
         for key, value in self.image2feature_dict.iteritems():
+            object_id = int(key.split('/')[-1].split('_')[0])
+            self.Y.append(object_id)
             self.im2index[key] = counter
             self.index2im[counter] = key
-            self.X[counter] = value
+            self.X[counter, :] = value
             counter += 1
+
+        self.Y = np.array(self.Y)
 
     def __construct_cs_matrix(self):
         """
@@ -37,6 +43,7 @@ class NearestNeighbour(object):
         :return: None
         """
         self.similarity_mat = cosine_similarity(self.X, self.X, dense_output=True)
+        # print self.similarity_mat
 
     def save_nearest_neighbors(self, num_neighbors, out_file):
         """
@@ -67,7 +74,20 @@ class NearestNeighbour(object):
         # compute neighbor statistics
         NearestNeighbour.compute_neighbor_stats(result_list, num_neighbors)
 
+        # plot the TSNE plot
+        self.plot_tsne()
+
         return result_list
+
+    def plot_tsne(self):
+        """
+        Plots the T-SNE for visualization of the objects and their separation in 2D space
+        :return:
+        """
+        plotter = Plotter(self.X, self.Y)
+        plotter.reduce() # reduces to 100 dimensions using PCA and then to 2 dimensions using T-SNE
+        plotter.plot()
+        plt.show()
 
     @staticmethod
     def compute_neighbor_stats(result_list, num_neighbors):
@@ -98,4 +118,4 @@ class NearestNeighbour(object):
         # plot the histogram plot for number of images with more than x matches
         # print plt.hist(total_true_nb, histtype='bar', rwidth=0.8)
         print plt.hist(total_true_nb, bins=np.arange(np.min(total_true_nb), np.max(total_true_nb)+1), align='left')
-        plt.show()
+        # plt.show()
