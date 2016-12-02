@@ -1,7 +1,6 @@
 # harpreif
 ![jigsaw](/images/jigsaw.png)
 Visual Representation Learning by solving Jigsaw puzzles using Deep Reinforcement Learning
-![jigsaw]
 
 ## Contents
  - [Dataset](#dataset)
