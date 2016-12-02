@@ -2,6 +2,7 @@ import argparse
 from harpreif.agent import Agent
 
 '''
+python train.py --train_images './train' --val_images './val' --checkpoint_dir './checkpnt/' --grid_dim 4 --reward_type 2 --state_type image
 SAMPLE RUN INSTRUCTIONS
 
 Local Machine

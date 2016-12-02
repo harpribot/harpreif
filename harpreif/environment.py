@@ -76,9 +76,11 @@ class Environment(object):
         if self.state_type == 'hog':
             self.__render_gamestate()
         elif self.state_type == 'image':
-            self.gamestate = np.digitize(
+            resized_discrete_im = np.digitize(
                             imresize(self.jigsaw_image, (self.state_height, self.state_width)),
                             self.bins)
+            self.gamestate = np.array([resized_discrete_im]).transpose().swapaxes(0, 1)
+
         else:
             ValueError('The state type is not valid, enter "hog" or "image"')
 
