@@ -113,7 +113,13 @@ class NearestNeighbour(object):
         average_match_per_obj = total_matches/float(len(total_true_nb))
 
         print 'Average Neighbor found per object: %f' % average_match_per_obj
-        print min(total_true_nb)
+
+        for i, x in enumerate(total_true_nb):
+            if x == 6:
+                print '------'
+                print image[i]
+                print neighbors[i]
+                print '------'
 
         # plot the histogram plot for number of images with more than x matches
         # print plt.hist(total_true_nb, histtype='bar', rwidth=0.8)

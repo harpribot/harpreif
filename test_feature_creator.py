@@ -5,7 +5,7 @@ SAMPLE RUN INSTRUCTIONS
 python test_feature_extractor.py --test_images '/work/03713/harshal1/maverick/RLProj/test'
                --saved_checkpoint'/work/03713/harshal1/maverick/RLProj/checkpoint/'
                --image_feat_dir './'
-               --grid_dim 8
+               --grid_dim 4
                --num_gradients 8
                --checkpoint_iter 20001
 '''

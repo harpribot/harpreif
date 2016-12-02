@@ -5,12 +5,8 @@
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/rep_viz/visualize_net.py" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/vizualize_network.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/harpreif/agent.py" afterPath="$PROJECT_DIR$/harpreif/agent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/harpreif/environment.py" afterPath="$PROJECT_DIR$/harpreif/environment.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/harpreif/myconstants.py" afterPath="$PROJECT_DIR$/harpreif/myconstants.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rep_viz/representation.py" afterPath="$PROJECT_DIR$/rep_viz/representation.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_feature_creator.py" afterPath="$PROJECT_DIR$/test_feature_creator.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train.py" afterPath="$PROJECT_DIR$/train.py" />
     </list>
     <ignored path="RLproject.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,8 +33,8 @@
       <file leaf-file-name="myconstants.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/harpreif/myconstants.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="23" column="44" selection-start-line="23" selection-start-column="44" selection-end-line="23" selection-end-column="44" />
+            <state relative-caret-position="330">
+              <caret line="22" column="89" selection-start-line="22" selection-start-column="89" selection-end-line="22" selection-end-column="89" />
               <folding />
             </state>
           </provider>
@@ -534,13 +530,6 @@
       <option name="presentableId" value="Default" />
       <updated>1476581449072</updated>
     </task>
-    <task id="LOCAL-00016" summary="Adds representation validation library">
-      <created>1478396583925</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1478396583925</updated>
-    </task>
     <task id="LOCAL-00017" summary="Adds visualization library for nearest neighbours">
       <created>1478396932655</created>
       <option name="number" value="00017" />
@@ -877,7 +866,14 @@
       <option name="project" value="LOCAL" />
       <updated>1480375745627</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="add functionality to represent images as states">
+      <created>1480710312549</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1480710312550</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TodoView">
@@ -963,7 +959,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Bugfix - Tries per image was done one time more than desired" />
     <MESSAGE value="Updates bin size in representation visualizer" />
     <MESSAGE value="makes train script elegent with argparser" />
     <MESSAGE value="adds neighbour visualization statistics" />
@@ -988,7 +983,8 @@
     <MESSAGE value="Makes changes to myconstants and debug printing" />
     <MESSAGE value="Adds 3 types of terminal reward for comparison" />
     <MESSAGE value="." />
-    <option name="LAST_COMMIT_MESSAGE" value="." />
+    <MESSAGE value="add functionality to represent images as states" />
+    <option name="LAST_COMMIT_MESSAGE" value="add functionality to represent images as states" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1293,8 +1289,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/harpreif/myconstants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="44" selection-start-line="23" selection-start-column="44" selection-end-line="23" selection-end-column="44" />
+        <state relative-caret-position="330">
+          <caret line="22" column="89" selection-start-line="22" selection-start-column="89" selection-end-line="22" selection-end-column="89" />
           <folding />
         </state>
       </provider>
