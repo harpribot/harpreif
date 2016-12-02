@@ -3,11 +3,12 @@ from skimage.feature import hog
 from image_utils import sliding_window, gradient_discretizer
 from myconstants import *
 import sys
+from scipy.misc import imresize
 
 
 class Environment(object):
     def __init__(self, original_image, initial_gamestate, grid_dim,
-                 puzzle_pieces, image_dim, window, stride, num_channels):
+                 puzzle_pieces, image_dim, window, stride, num_channels, state_type):
         """
 
         :param original_image: The true output expected. It is used to give reward
@@ -18,7 +19,10 @@ class Environment(object):
         :param window: The window dimension for HOG based state space construction
         :param stride: The stride of the sliding window for HOG
         :param num_channels: The number of channels of the state space (= number of gradients given by HOG)
+        :param state_type: 'hog' -> state is windowed HOG filter ,
+                           'image' -> state is just the partially solved jigsaw image
         """
+        self.state_type = state_type
         self.bins = np.array([x/float(NUM_BINS) for x in range(0, NUM_BINS, 1)])
         self.original_image = original_image
         self.jigsaw_image = np.zeros([image_dim, image_dim])
@@ -69,7 +73,14 @@ class Environment(object):
         """
         jigsaw_id, place_id = self.decode_action()
         self.__update_placed_pieces(jigsaw_id, place_id)
-        self.__render_gamestate()
+        if self.state_type == 'hog':
+            self.__render_gamestate()
+        elif self.state_type == 'image':
+            self.gamestate = np.digitize(
+                            imresize(self.jigsaw_image, (self.state_height, self.state_width)),
+                            self.bins)
+        else:
+            ValueError('The state type is not valid, enter "hog" or "image"')
 
     def __render_gamestate(self):
         """

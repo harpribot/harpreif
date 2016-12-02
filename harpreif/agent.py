@@ -12,7 +12,7 @@ import cPickle as pickle
 
 
 class Agent(Creator):
-    def __init__(self, num_actions, grid_dim, num_gradients):
+    def __init__(self, num_actions, grid_dim, num_gradients, state_type):
         """
 
         :param num_actions: Number of actions possible for the agent - The encoding is such that,
@@ -21,13 +21,22 @@ class Agent(Creator):
         :param grid_dim: Number of horizontal (equalling vertical breaks) on the original image to form pieces
         :param num_gradients: Number of bins for HOG (Histogram of Oriented Gradients) for each patch in a
                             sliding window across the jigsaw image (the image that is already been constructed)
+        :param state_type: 'hog' -> state is windowed HOG filter ,
+                           'image' -> state is just the partially solved jigsaw image
         """
+        self.state_type = state_type
         self.grid_dim = grid_dim
         self.num_gradients = num_gradients
         self.num_actions = num_actions
         self.input_height = len(range(0, IMAGE_HEIGHT - SLIDING_STRIDE, SLIDING_STRIDE))
         self.input_width = self.input_height
-        self.input_channels = self.num_gradients
+        if self.state_type == 'hog':
+            self.input_channels = self.num_gradients
+        elif self.state_type == 'image':
+            self.input_channels = 1
+        else:
+            raise ValueError('State type not recognized, enter hog or image')
+
         self.sess = None
         self.train_dir = None
         self.val_dir = None
@@ -160,7 +169,7 @@ class Agent(Creator):
         # initialize the environment
         env = Environment(imagenet.get_image(), state, self.grid_dim, imagenet.get_puzzle_pieces(),
                           IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
-                          self.input_channels)
+                          self.input_channels, self.state_type)
         # saving and loading networks
         self.__model_loader()
         # initialize parameters and replay memory
@@ -232,7 +241,7 @@ class Agent(Creator):
         # initialize the environment
         env = Environment(imagenet.get_image(), state, self.grid_dim, imagenet.get_puzzle_pieces(),
                           IMAGE_HEIGHT, WINDOW_SIZE, SLIDING_STRIDE,
-                          self.input_channels)
+                          self.input_channels, self.state_type)
         reward_list = []
         image_diff_list = []
         episode_reward = 0.0
