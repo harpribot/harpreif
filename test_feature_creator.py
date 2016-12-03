@@ -16,13 +16,15 @@ parser.add_argument('--grid_dim', type=int, default=8)
 parser.add_argument('--num_gradients', type=int, default=8)
 parser.add_argument('--image_feat_dir', type=str, default='./')
 parser.add_argument('--checkpoint_iter', type=int)
+parser.add_argument('--state_type', type=str, default='hog')
 opt = parser.parse_args()
 
 
 num_actions = opt.grid_dim ** 4
 
-im2f = Image2Feature(opt.test_images, opt.saved_checkpoint, opt.checkpoint_iter, num_actions, opt.num_gradients)
-image2feature_map, feat_sz = im2f.image2feature(save_transform=True, im2f_loc= opt.image_feat_dir)
+im2f = Image2Feature(opt.test_images, opt.saved_checkpoint, opt.checkpoint_iter,
+                     num_actions, opt.num_gradients, opt.state_type)
+image2feature_map, feat_sz = im2f.image2feature(save_transform=True, im2f_loc=opt.image_feat_dir)
 
 
 

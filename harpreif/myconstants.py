@@ -14,11 +14,11 @@ GAMMA = 0.99                         # discount factor for reinforcement learnin
 WINDOW_SIZE = [8, 8]                 # window dimension over which hog is computed
 SLIDING_STRIDE = WINDOW_SIZE[0]/2    # sliding stride for the window used for HOG
 IMAGE_HEIGHT = IMAGE_WIDTH = 256     # the dimension of a true image
-TRIES_PER_IMAGE = 1                  # Number of tries to do per image
+TRIES_PER_IMAGE = 2                  # Number of tries to do per image
 ALPHA = 0.01                         # Leaky RELU parameter - prevents dyeing neurons
 DELAY_REWARD = -0.05                 # the reward given for each action that leads to non-terminal state
 REPLACING_PENALTY = -1.0             # Penalty when removing an already placed piece
-STEPS_MAX = 20                       # The maximum allowed step for each episode
+STEPS_MAX = 30                       # The maximum allowed step for each episode
 NUM_BINS = 64                        # Number of bins in which the histogram is discretised
 NUM_VALIDATION_IMAGES = 100          # Number of images to be used for validation testing
 NUM_IMAGES_PER_VALIDATION = 500      # Number of images to train upon before validating
