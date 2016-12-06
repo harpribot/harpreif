@@ -2,7 +2,7 @@ import argparse
 from harpreif.agent import Agent
 
 '''
-python train.py --train_images './train' --val_images './val' --checkpoint_dir './checkpnt/' --grid_dim 4 --reward_type 2 --state_type image
+python train.py --train_images './train' --val_images './val' --checkpoint_dir './checkpnt/' --grid_dim 4 --reward_type 2 --state_type image --jitter True --mean_removal True
 SAMPLE RUN INSTRUCTIONS
 
 Local Machine
@@ -29,9 +29,12 @@ parser.add_argument('--grid_dim', type=int, default=8)
 parser.add_argument('--num_gradients', type=int, default=8)
 parser.add_argument('--reward_type', type=int, default=1)
 parser.add_argument('--state_type', type=str, default='hog')
+parser.add_argument('--mean_removal', type=bool, default=True)
+parser.add_argument('--jitter', type=bool, default=False)
+parser.add_argument('--mean_file', type=str, default='./ilsvrc_2012_mean.npy')
 opt = parser.parse_args()
 num_actions = opt.grid_dim ** 4
 
 # create and train the agent
-agent = Agent(num_actions, opt.grid_dim, opt.num_gradients, opt.state_type)
+agent = Agent(num_actions, opt.grid_dim, opt.num_gradients, opt.state_type, opt.mean_removal, opt.jitter, opt.mean_file)
 agent.play_game(opt.train_images, opt.val_images, opt.checkpoint_dir, opt.reward_type)

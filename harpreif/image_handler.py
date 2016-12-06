@@ -5,18 +5,25 @@ import image_slicer
 import numpy as np
 from skimage.color import rgb2gray
 from random import shuffle
+from image_utils import subtract_image_mean, supress_corners, jitter_image
 
 
 class ImageNet(object):
-    def __init__(self, image_dir, grid_dim, num_images=None):
+    def __init__(self, image_dir, grid_dim, mean_removal, jitter, mean_dump=None, num_images=None):
         """
 
         :param image_dir: The directory containing all the resized 256 x 256 images of train.
         :param grid_dim: The number of horizontal and vertical cuts required to form the jigsaw piece
+        :param mean_removal: True, if removing imagenet mean from the original image, else False
+        :param jitter: True, if adding jitter to the jigsaw pieces, else False
+        :param mean_dump: The location of the dump of the imagenet mean file
         :param num_images: Total number of images to be used for training/ validation / testing. If None, use all.
         """
+        self.mean_dump = mean_dump
         self.image_dir = image_dir
         self.grid_dim = grid_dim
+        self.mean_removal = mean_removal
+        self.jitter = jitter
         self.num_images = num_images
         self.image_list = None
         self.image_ptr = 0
@@ -52,6 +59,9 @@ class ImageNet(object):
             self.image = rgb2gray(self.image)
 
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
+        # remove mean
+        if self.mean_removal:
+            self.image = subtract_image_mean(self.image, self.mean_dump)
         self.__break_into_jigzaw_pieces()
         self.image_ptr += 1
         self.tries = 1
@@ -86,8 +96,10 @@ class ImageNet(object):
         """
         result = dict()
         for piece_id, piece in enumerate(self.tiles):
-            piece_image = np.array(piece.image)
-            result[piece_id] = rgb2gray(piece_image)
+            piece_image = rgb2gray(np.array(piece.image))
+            if self.jitter:
+                piece_image = supress_corners(jitter_image(piece_image))
+            result[piece_id] = piece_image
 
         return result
 

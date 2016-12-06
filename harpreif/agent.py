@@ -12,7 +12,7 @@ import cPickle as pickle
 
 
 class Agent(Creator):
-    def __init__(self, num_actions, grid_dim, num_gradients, state_type):
+    def __init__(self, num_actions, grid_dim, num_gradients, state_type, mean_removal, jitter, mean_file):
         """
 
         :param num_actions: Number of actions possible for the agent - The encoding is such that,
@@ -23,11 +23,19 @@ class Agent(Creator):
                             sliding window across the jigsaw image (the image that is already been constructed)
         :param state_type: 'hog' -> state is windowed HOG filter ,
                            'image' -> state is just the partially solved jigsaw image
+        :param mean_removal: True if the imagenet mean is to be removed from the input image, else False.
+                            Default = True
+        :param mean_file: The location of the imagenet mean file
+        :param jitter: True when the jigsaw piece is to be jittered (corner supression, + random rotation),
+                        Dafault = False
         """
         self.state_type = state_type
+        self.mean_removal = mean_removal
+        self.jitter = jitter
         self.grid_dim = grid_dim
         self.num_gradients = num_gradients
         self.num_actions = num_actions
+        self.mean_file = mean_file
         self.input_height = len(range(0, IMAGE_HEIGHT - SLIDING_STRIDE, SLIDING_STRIDE))
         self.input_width = self.input_height
         if self.state_type == 'hog':
@@ -83,7 +91,7 @@ class Agent(Creator):
         Loads the image iterator
         :return: image iterator
         """
-        return ImageNet(self.train_dir, self.grid_dim, num_images)
+        return ImageNet(self.train_dir, self.grid_dim, self.mean_removal, self.jitter, self.mean_file, num_images)
 
     def __get_initial_state(self):
         """
