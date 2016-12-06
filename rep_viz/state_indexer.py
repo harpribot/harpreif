@@ -10,7 +10,7 @@ from scipy.misc import imresize
 
 
 class Image2Feature(Creator):
-    def __init__(self, image_dir, checkpoint_dir, checkpoint_iter, num_actions, num_gradients, state_type):
+    def __init__(self, image_dir, checkpoint_dir, checkpoint_iter, num_actions, num_gradients, state_type, mean_file):
         """
 
         :param image_dir: The test directory for images
@@ -18,8 +18,10 @@ class Image2Feature(Creator):
         :param num_actions: Number of actions that the agent can take
         :param num_gradients: Number of gradients to be used for each window
         :param state_type: 'hog' for using windowed HOG gradient as state, 'image' for using raw images itself
+        :param mean_file: The file containing the imagenet mean
         """
         self.state_type = state_type
+        self.mean_file = mean_file
         self.image_dir = image_dir
         self.bins = np.array([x / float(NUM_BINS) for x in range(0, NUM_BINS, 1)])
         self.sess = None
@@ -62,7 +64,7 @@ class Image2Feature(Creator):
         Loads the images into imagenet from which it can be queried
         :return: None
         """
-        self.imagenet = ImageLoader(self.image_dir)
+        self.imagenet = ImageLoader(self.image_dir, self.mean_file)
 
     def image2feature(self, save_transform=False, im2f_loc=None):
         """

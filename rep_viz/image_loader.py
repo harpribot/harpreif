@@ -2,15 +2,17 @@ from scipy import ndimage
 import glob
 from skimage.color import rgb2gray
 from random import shuffle
+from harpreif.image_utils import subtract_image_mean
 
 
 class ImageLoader(object):
-    def __init__(self, image_dir):
+    def __init__(self, image_dir, mean_dump=None):
         """
 
         :param image_dir: The directory containing all the resized 256 x 256 images of train.
         """
         self.image_dir = image_dir
+        self.mean_dump = mean_dump
         self.image_list = None
         self.image_ptr = 0
         self.__index_images()
@@ -45,6 +47,7 @@ class ImageLoader(object):
             self.image = rgb2gray(self.image)
 
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
+        self.image = subtract_image_mean(self.image, self.mean_dump)
         self.image_ptr += 1
 
         return True
