@@ -5,6 +5,13 @@ from harpreif.myconstants import *
 
 class Creator(object):
     def __init__(self, input_channels, num_actions, input_height, input_width):
+        """
+        Creates the DQN network for the Reinforcement Learning
+        :param input_channels: The number of channels in the input state
+        :param num_actions: Number of actions to be predicted by DQN, equals the output vector size of DQN
+        :param input_height: The height of the input state
+        :param input_width: The width of the input state
+        """
         self.input_channels = input_channels
         self.num_actions = num_actions
         self.input_height = input_height
@@ -87,7 +94,6 @@ class Creator(object):
         :return: None
         """
         self.readout = tf.matmul(self.h_fc2, self.W_fc3) + self.b_fc3
-        # self.readout = debug_printer(self.readout, "Output Layer output: ")
 
     def _define_loss(self):
         """

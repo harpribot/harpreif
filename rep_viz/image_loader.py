@@ -8,7 +8,7 @@ from harpreif.image_utils import subtract_image_mean
 class ImageLoader(object):
     def __init__(self, image_dir, mean_dump=None):
         """
-
+        Loads the image from the image directory
         :param image_dir: The directory containing all the resized 256 x 256 images of train.
         """
         self.image_dir = image_dir
@@ -64,6 +64,7 @@ class ImageLoader(object):
         else:
             raise TypeError('The image is not of standard dimension')
 
+    @property
     def get_image(self):
         """
         Get the train image that the RL algo is currently training one

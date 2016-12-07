@@ -53,12 +53,40 @@ class NearestNeighbour(object):
         :return: None
         """
         neighbor_list = self.compute_nearest_neighbors(num_neighbors)
-        # save it
         with open(out_file, 'wb') as out:
             for item in neighbor_list:
                 print>>out, item
 
+    def evaluate(self):
+        """
+        Evaluate the representation learning on Precision@K, MRR and MAP
+        :return: None
+        """
+        self.__prepare_evaluation_matrix()
+        print 'Precision@20:{}'.format(self.precision(k=20))
+        print 'Precision@100:{}'.format(self.precision(k=100))
+        print 'MRR:{}'.format(self.mean_reciprocal_rank())
+        print 'MAP@20:{}'.format(self.mean_average_precision(k=20))
+        print 'MAP@100:{}'.format(self.mean_average_precision(k=100))
+        print 'MAP@500:{}'.format(self.mean_average_precision(k=500))
+
+    def __prepare_evaluation_matrix(self):
+        """
+        Prepare the evaluation matrix for subsequent evaluations
+        :return: None
+        """
+        cosine_sort = [np.argsort(row)[1:] for row in self.similarity_mat]
+        image_list = [[self.index2im[x] for x in row] for row in cosine_sort]
+        object_list = [[int(x.split('/')[-1].split('_')[0]) for x in row] for row in image_list]
+        self.evaluation_list = np.array(object_list)
+        assert self.numimages == self.evaluation_list.shape[0], 'Sample length mismatch'
+
     def compute_nearest_neighbors(self, num_neighbors):
+        """
+        Computes the nearest neighbor based on cosine similarity
+        :param num_neighbors: Number of nearest neighbors to be considered
+        :return: List of nearest neighbors
+        """
         result_list = []
         for key, value in self.im2index.iteritems():
             neighbor_list = [key]
@@ -85,9 +113,56 @@ class NearestNeighbour(object):
         :return:
         """
         plotter = Plotter(self.X, self.Y)
-        plotter.reduce() # reduces to 100 dimensions using PCA and then to 2 dimensions using T-SNE
+        plotter.reduce()  # reduces to 100 dimensions using PCA and then to 2 dimensions using T-SNE
         plotter.plot()
         plt.show()
+
+    def precision(self, k=20):
+        """
+        Precision@k evaluation metric
+        :param k: Parameter of the metric
+        :return: The evaluation value
+        """
+        precision = 0.
+        for i in range(self.numimages):
+            query_image_obj = int(self.index2im[i].split('/')[-1].split('_')[0])
+            precision += sum(self.evaluation_list[i,:k] == query_image_obj)
+
+        precision /= float(self.numimages)
+        return precision
+
+    def mean_reciprocal_rank(self):
+        """
+        MRR evaluation metric
+        :return: The evaluation value
+        """
+        mrr = 0.
+        for i in range(self.numimages):
+            query_image_obj = int(self.index2im[i].split('/')[-1].split('_')[0])
+            mrr += 1.0/(np.where(self.evaluation_list[i] == query_image_obj)[0][0] + 1)
+        mrr /= float(self.numimages)
+        return mrr
+
+    def mean_average_precision(self, k=100):
+        """
+        MAP evaluation metric
+        :param k: Parameter of the metric
+        :return: The evaluation value
+        """
+        MAP = 0.
+        for id_ in range(self.numimages):
+            query_image_obj = int(self.index2im[id_].split('/')[-1].split('_')[0])
+            ap = 0.
+            for i in range(k):
+                precision = sum(self.evaluation_list[id_, :i] == query_image_obj)
+                relevance = (self.evaluation_list[id_, i-1] == query_image_obj)
+                if relevance:
+                    ap += precision
+            ap /= k
+            MAP += ap
+
+        MAP /= self.numimages
+        return MAP
 
     @staticmethod
     def compute_neighbor_stats(result_list, num_neighbors):
@@ -122,6 +197,4 @@ class NearestNeighbour(object):
                 print '------'
 
         # plot the histogram plot for number of images with more than x matches
-        # print plt.hist(total_true_nb, histtype='bar', rwidth=0.8)
         print plt.hist(total_true_nb, bins=np.arange(np.min(total_true_nb), np.max(total_true_nb)+1), align='left')
-        # plt.show()

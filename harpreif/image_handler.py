@@ -59,7 +59,7 @@ class ImageNet(object):
             self.image = rgb2gray(self.image)
 
         assert self.image.shape == (256, 256), 'Image not 256 x 256'
-        # remove mean
+
         if self.mean_removal:
             self.image = subtract_image_mean(self.image, self.mean_dump)
         self.__break_into_jigzaw_pieces()
@@ -103,13 +103,6 @@ class ImageNet(object):
 
         return result
 
-    def get_tries_per_image(self):
-        """
-        Returns the number of episodes that have been trained on a particular image.
-        :return: The number of episodes used for training a image
-        """
-        return self.tries
-
     def increment_tries(self):
         """
         Increment the episode count after the current episode termination
@@ -117,6 +110,15 @@ class ImageNet(object):
         """
         self.tries += 1
 
+    @property
+    def get_tries_per_image(self):
+        """
+        Returns the number of episodes that have been trained on a particular image.
+        :return: The number of episodes used for training a image
+        """
+        return self.tries
+
+    @property
     def get_image(self):
         """
         Get the train image that the RL algo is currently training one

@@ -12,14 +12,29 @@ sea.set_context("notebook", font_scale=1.5,
 
 class Plotter(object):
     def __init__(self, sample_feat, sample_label):
+        """
+        Plots T-SNE
+        :param sample_feat:
+        :param sample_label:
+        """
         self.sample_feat = np.array(sample_feat)
         self.sample_label = sample_label
 
     def reduce(self, layer = (100, 2)):
+        """
+
+        :param layer:
+        :return:
+        """
         self.__reduce_pca(layer[0])
         self.__reduce_sne(layer[0], layer[1])
 
     def __reduce_pca(self, reduced_dim):
+        """
+
+        :param reduced_dim:
+        :return:
+        """
         print "Reducing using PCA..."
         pca = PCA(n_components=reduced_dim, copy=False)
         self.sample_feat = pca.fit_transform(self.sample_feat)
@@ -27,6 +42,12 @@ class Plotter(object):
         assert self.sample_feat.shape[1] == reduced_dim, 'Dimension mismatch after reduction'
 
     def __reduce_sne(self, input_dim, reduced_dim):
+        """
+
+        :param input_dim:
+        :param reduced_dim:
+        :return:
+        """
         print "Reducing using T-SNE..."
         assert self.sample_feat.shape[1] == input_dim, 'Dimension mismatch before reduction'
         tsne = TSNE(n_components=reduced_dim, random_state=0)
@@ -35,6 +56,10 @@ class Plotter(object):
         assert self.sample_feat.shape[1] == reduced_dim, 'Dimension mismatch after reduction'
 
     def plot(self):
+        """
+        Plots a scatter image of the representation of the test data
+        :return: None
+        """
         print "Plotting..."
         f, ax, sc, txts = Plotter.scatter(self.sample_feat, self.sample_label)
         f.savefig('./images/digits_tsne-generated.png', dpi=120)
@@ -42,6 +67,12 @@ class Plotter(object):
 
     @staticmethod
     def scatter(x, colors):
+        """
+        Obtains a scatter plot
+        :param x:
+        :param colors:
+        :return:
+        """
         # We choose a color palette with seaborn.
         palette = np.array(sea.color_palette("hls", 258))
 

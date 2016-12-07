@@ -118,11 +118,11 @@ class Agent(Creator):
     def __play_one_move(self, state, env, reward_type, epsilon, time=None):
         """
         Plays for one step, i.e. agent places one piece on the board.
-        :param state:
-        :param env:
-        :param epsilon:
-        :param time:
-        :return:
+        :param state: Current State of the MDP
+        :param env: Current environment of the agent
+        :param epsilon: The geediness of the agent's policy
+        :param time: The timestep of the gameplay
+        :return: (New State, Agent Action, Reward of the action, Boolean depicting if the next state is terminal)
         """
         readout_t = self.readout.eval(feed_dict={self.s: [state]})
         a_t, action_index = self.__greedy_action(readout_t, epsilon, time)
@@ -137,8 +137,8 @@ class Agent(Creator):
     def __train_minibatch(self, replay_memory, learning_rate):
         """
         Trains the model for a minibatch
-        :param replay_memory:
-        :param learning_rate:
+        :param replay_memory: The replay buffer of past transitions kept by the agent, over which it trains
+        :param learning_rate: The learning rate of the agent
         :return: None
         """
         minibatch = random.sample(replay_memory, BATCH_SIZE)
@@ -208,8 +208,8 @@ class Agent(Creator):
                     if self.image_handled % NUMBER_OF_IMAGES_FOR_DECAY == 0:
                         learning_rate /= LEARNING_DECAY
                     # test the network on the validation data after training on certain number of images
-                    # if self.image_handled % NUM_IMAGES_PER_VALIDATION == 1:
-                    #    self.test_network(reward_type)
+                    if self.image_handled % NUM_IMAGES_PER_VALIDATION == 1:
+                        self.test_network(reward_type)
                     episode_reward_list.append(episode_reward)
                     image_present = imagenet.load_next_image()
                     if image_present:
@@ -277,10 +277,10 @@ class Agent(Creator):
     def __greedy_action(self, value_function, epsilon, t=None):
         """
         Returns an epsilon greedy action
-        :param value_function:
-        :param epsilon:
-        :param t:
-        :return:
+        :param value_function: Current Q - Value function
+        :param epsilon: The greediness of the agent
+        :param t: The timestep of the gameplay
+        :return: (Greedy Action Vector, Greedy Action value)
         """
         a_t = np.zeros([self.num_actions])
 

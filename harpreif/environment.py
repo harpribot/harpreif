@@ -151,8 +151,6 @@ class Environment(object):
         reward
         :return:The normalized reward
         """
-        # if np.all(self.jigsaw_image == self.original_image):
-        #    print 'Image and Jigsaw matches'
         assert self.original_image.shape == (256, 256), 'Faulty original image has dimension:' + \
                                                         str(self.original_image.shape)
         assert self.jigsaw_image.shape == (256, 256), 'Faulty jigsaw image has dimension:' + \
@@ -183,7 +181,6 @@ class Environment(object):
         For the given action, transmitted to the environment by the agent, the environment rewards the agent.
         :return: Reward given by the environment to the agent for the action taken
         """
-        # get the reward based on the after-state
         if self.terminal:
             if rt == 0:
                 return min(5, max(-5, self.get_normalized_image_diff_reward())) + self.get_matching_reward()
@@ -273,6 +270,7 @@ class Environment(object):
 
         assert self.jigsaw_image.shape == (256, 256), "Trying to alter the image size"
 
+    @property
     def get_state(self):
         """
         return the current gamestate
