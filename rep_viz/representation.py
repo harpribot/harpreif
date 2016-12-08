@@ -63,12 +63,12 @@ class NearestNeighbour(object):
         :return: None
         """
         self.__prepare_evaluation_matrix()
+        print 'Precision@5:{}'.format(self.precision(k=5))
         print 'Precision@20:{}'.format(self.precision(k=20))
-        print 'Precision@100:{}'.format(self.precision(k=100))
         print 'MRR:{}'.format(self.mean_reciprocal_rank())
+        print 'MAP@5:{}'.format(self.mean_average_precision(k=5))
         print 'MAP@20:{}'.format(self.mean_average_precision(k=20))
-        print 'MAP@100:{}'.format(self.mean_average_precision(k=100))
-        print 'MAP@500:{}'.format(self.mean_average_precision(k=500))
+        print 'MAP@50:{}'.format(self.mean_average_precision(k=50))
 
     def __prepare_evaluation_matrix(self):
         """

@@ -24,7 +24,7 @@ for key, value in image2feature_map.iteritems():
         feat_sz = value[0].size
 
 nb_obj = NearestNeighbour(image2feature_map, feat_sz)
-# result_list = nb_obj.save_nearest_neighbors(opt.num_neighbors, opt.nb_out_file)
-nb_obj.evaluate()
+result_list = nb_obj.save_nearest_neighbors(opt.num_neighbors, opt.nb_out_file)
+# nb_obj.evaluate()
 
 
